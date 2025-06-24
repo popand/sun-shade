@@ -51,19 +51,23 @@ A comprehensive iOS app for UV index monitoring and sun safety, built with Swift
 ## Screenshots
 
 ### Dashboard View
-![Dashboard](screenshots/dashboard.png)
+<img src="screenshots/dashboard.png" alt="Dashboard" width="50%">
+
 *Main dashboard showing UV index, weather conditions, and safety recommendations*
 
 ### Safety Timer
-![Safety Timer](screenshots/timer.png)
+<img src="screenshots/timer.png" alt="Safety Timer" width="50%">
+
 *Customizable safety timer with exposure session logging*
 
 ### Weather Forecast
-![Weather Forecast](screenshots/forecast.png)
+<img src="screenshots/forecast.png" alt="Weather Forecast" width="50%">
+
 *5-day forecast with tanning quality indicators*
 
 ### Profile View
-![Profile](screenshots/profile.png)
+<img src="screenshots/profile.png" alt="Profile" width="50%">
+
 *User profile with statistics and personalization options*
 
 ## Technical Features
