@@ -162,17 +162,32 @@ struct WeatherData {
         TanningQuality.fromConditions(uvIndex: uvIndex, cloudCover: cloudCover)
     }
     
-    init(from forecastResponse: WeatherResponseForecast) {
+    init(from forecastResponse: WeatherResponseForecast, uvIndex: Double? = nil) {
         // Use the first forecast item for current weather
         let currentItem = forecastResponse.list.first
         
         self.temperature = currentItem?.main.temp ?? 70.0
-        self.uvIndex = 7.0 // Forecast API doesn't include UV, we'll estimate based on conditions
         self.humidity = currentItem?.main.humidity ?? 50
         self.cloudCover = currentItem?.clouds.all ?? 20
         self.condition = currentItem?.weather.first?.main ?? "Clear"
         self.description = currentItem?.weather.first?.description.capitalized ?? "Clear"
         self.iconName = currentItem?.weather.first?.icon ?? "01d"
+        
+        // Use UV API data if available, otherwise calculate
+        if let apiUVIndex = uvIndex {
+            self.uvIndex = apiUVIndex
+            print("🌞 UV DEBUG - Using UV Index API:")
+            print("   📡 API UV Index: \(String(format: "%.1f", apiUVIndex))")
+            print("   ✅ Using Real UV Data from OpenWeatherMap")
+        } else {
+            self.uvIndex = Self.calculateCurrentUVIndex(cloudCover: self.cloudCover)
+            print("🌞 UV DEBUG - Using Calculated UV:")
+            print("   📡 API UV Index: Not available")
+            print("   🧮 Calculated UV Index: \(String(format: "%.1f", self.uvIndex))")
+        }
+        
+        print("   ☁️ Cloud Cover: \(self.cloudCover)%")
+        print("   ⏰ Current Time: \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .short))")
         
         // Convert forecast list to daily forecasts
         self.forecast = Self.convertToDailyForecast(from: forecastResponse.list)
@@ -187,6 +202,13 @@ struct WeatherData {
         self.description = onecallResponse.current.weather.first?.description.capitalized ?? "Clear"
         self.iconName = onecallResponse.current.weather.first?.icon ?? "01d"
         self.forecast = onecallResponse.daily?.prefix(5).map { ForecastDay(from: $0) } ?? []
+        
+        // Debug logging for UV values
+        print("🌞 UV DEBUG - OnecCall API Response:")
+        print("   📡 API UV Index: \(String(format: "%.1f", onecallResponse.current.uvi))")
+        print("   ☁️ Cloud Cover: \(self.cloudCover)%")
+        print("   ✅ Using API UV Index: \(String(format: "%.1f", self.uvIndex))")
+        print("   ⏰ Current Time: \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .short))")
     }
     
     private static func convertToDailyForecast(from list: [ForecastItem]) -> [ForecastDay] {
@@ -237,6 +259,62 @@ struct WeatherData {
             condition: middayItem.weather.first?.main ?? "Clear",
             iconName: middayItem.weather.first?.icon ?? "01d"
         )
+    }
+    
+    private static func calculateCurrentUVIndex(cloudCover: Int) -> Double {
+        // Calculate UV index based on current time and cloud cover
+        let now = Date()
+        let hour = Calendar.current.component(.hour, from: now)
+        let minute = Calendar.current.component(.minute, from: now)
+        let timeDecimal = Double(hour) + Double(minute) / 60.0
+        
+        print("🧮 UV Calculation Details:")
+        print("   ⏰ Current Time: \(hour):\(String(format: "%02d", minute)) (decimal: \(String(format: "%.2f", timeDecimal)))")
+        
+        var baseUV: Double
+        
+        // More detailed time-based UV calculation
+        switch timeDecimal {
+        case 0.0..<6.0:
+            baseUV = 0.0 // Night: No UV
+        case 6.0..<7.0:
+            baseUV = 1.0 // Early morning: Very low
+        case 7.0..<8.0:
+            baseUV = 2.0 // Morning: Low
+        case 8.0..<9.0:
+            baseUV = 4.0 // Mid-morning: Moderate
+        case 9.0..<10.0:
+            baseUV = 6.0 // Late morning: High
+        case 10.0..<12.0:
+            baseUV = 9.0 // Peak morning: Very high
+        case 12.0..<14.0:
+            baseUV = 11.0 // Peak midday: Extreme
+        case 14.0..<15.0:
+            baseUV = 9.0 // Early afternoon: Very high
+        case 15.0..<16.0:
+            baseUV = 7.0 // Mid-afternoon: High
+        case 16.0..<17.0:
+            baseUV = 5.0 // Late afternoon: Moderate
+        case 17.0..<18.0:
+            baseUV = 3.0 // Early evening: Low
+        case 18.0..<19.0:
+            baseUV = 2.0 // Evening: Low
+        case 19.0..<20.0:
+            baseUV = 1.0 // Late evening: Very low
+        default:
+            baseUV = 0.0 // Night: No UV
+        }
+        
+        // Adjust for cloud cover
+        let cloudFactor = max(0.1, 1.0 - (Double(cloudCover) / 120.0))
+        let cloudAdjustedUV = baseUV * cloudFactor
+        let finalUV = min(11.0, max(0.0, cloudAdjustedUV))
+        
+        print("   ☀️ Base UV (time-based): \(String(format: "%.1f", baseUV))")
+        print("   ☁️ Cloud Factor: \(String(format: "%.2f", cloudFactor)) (from \(cloudCover)% clouds)")
+        print("   🎯 Final UV Index: \(String(format: "%.1f", finalUV))")
+        
+        return finalUV
     }
     
     private static func estimateUVIndex(from item: ForecastItem) -> Double {
