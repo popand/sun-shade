@@ -1,4 +1,5 @@
 import SwiftUI
+import AudioToolbox
 
 struct SafetyTimerView: View {
     @State private var remainingTime: TimeInterval = 0
@@ -76,7 +77,7 @@ struct SafetyTimerView: View {
     
     func toggleTimer() {
         if isTimerRunning {
-            stopTimer()
+            stopTimer(timerCompleted: false)
         } else {
             startTimer()
         }
@@ -91,15 +92,21 @@ struct SafetyTimerView: View {
             if remainingTime > 0 {
                 remainingTime -= 1
             } else {
-                stopTimer()
+                stopTimer(timerCompleted: true)
             }
         }
     }
     
-    func stopTimer() {
+    func stopTimer(timerCompleted: Bool = false) {
         timer?.invalidate()
         timer = nil
         isTimerRunning = false
+        
+        // Play alarm sound if timer completed naturally
+        if timerCompleted {
+            playAlarmSound()
+            print("🔔 Timer completed - alarm played")
+        }
         
         // Log the session if it ran for at least 10 seconds
         if let startTime = sessionStartTime {
@@ -135,6 +142,23 @@ struct SafetyTimerView: View {
         
         exposureLog.addSession(session)
         print("🎯 Session added to log")
+    }
+    
+    private func playAlarmSound() {
+        // Play system sound - try multiple options for best compatibility
+        
+        // Option 1: Try default alarm sound
+        AudioServicesPlaySystemSound(1005) // Sound ID for default alarm
+        
+        // Option 2: Add vibration for additional feedback
+        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+        
+        // Option 3: Alternative sound if available
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            AudioServicesPlaySystemSound(1013) // Sound ID for alarm tone
+        }
+        
+        print("🔊 Playing alarm sound and vibration")
     }
     
     func timeString(from timeInterval: TimeInterval) -> String {
