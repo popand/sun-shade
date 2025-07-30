@@ -116,6 +116,10 @@ class DashboardViewModel: ObservableObject {
         greeting = TimeUtils.getPersonalizedGreeting(name: userProfile.name)
     }
     
+    func updateGreetingForUser(_ userName: String) {
+        greeting = TimeUtils.getPersonalizedGreeting(name: userName)
+    }
+    
     private func fetchWeatherData(for location: CLLocation) async {
         isLoading = true
         weatherError = nil
