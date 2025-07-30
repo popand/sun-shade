@@ -1,6 +1,6 @@
 //
-//  SunSmartApp.swift
-//  SunSmart
+//  SunshadeApp.swift
+//  Sunshade
 //
 //  Created by Andrei Pop on 2025-06-23.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct SunSmartApp: App {
+struct SunshadeApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

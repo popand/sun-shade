@@ -1,13 +1,13 @@
 //
-//  SunSmartUITestsLaunchTests.swift
-//  SunSmartUITests
+//  SunshadeUITestsLaunchTests.swift
+//  SunshadeUITests
 //
 //  Created by Andrei Pop on 2025-06-23.
 //
 
 import XCTest
 
-final class SunSmartUITestsLaunchTests: XCTestCase {
+final class SunshadeUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
