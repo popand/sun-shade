@@ -40,14 +40,10 @@ This guide will help you set up Google Sign-In for the Sunshade app.
    - Select the latest version and add to your project
    - Make sure to add `GoogleSignIn` to your main app target
 
-3. **Configure URL Schemes:**
-   - In Xcode, select your project in the Project Navigator
-   - Select your app target
-   - Go to the **Info** tab
-   - Expand **URL Types** section
-   - Click the **+** button to add a URL scheme
-   - In the dialog that appears, add your REVERSED_CLIENT_ID from GoogleService-Info.plist as the URL scheme
-   - Set the Role to **Editor**
+3. **URL Schemes are Pre-configured:**
+   - The URL schemes are already configured in the project settings
+   - Your REVERSED_CLIENT_ID (`com.googleusercontent.apps.1018143342717-00ph737p0nhjr0qmfbe846pnn6qmjseg`) is automatically included
+   - No manual configuration needed for URL schemes
 
 ## Step 5: Update App Transport Security (Optional)
 
