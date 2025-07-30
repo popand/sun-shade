@@ -2,7 +2,7 @@ import SwiftUI
 import AuthenticationServices
 
 struct AuthenticationView: View {
-    @StateObject private var authManager = AuthenticationManager()
+    @EnvironmentObject var authManager: AuthenticationManager
     
     var body: some View {
         NavigationView {
@@ -37,22 +37,32 @@ struct AuthenticationView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 30)
                     
-                    // Apple Sign In Button
-                    SignInWithAppleButton(
-                        onRequest: { request in
-                            request.requestedScopes = [.fullName, .email]
-                        },
-                        onCompletion: { result in
-                            // Handle completion - this will be handled by AuthenticationManager
-                        }
-                    )
-                    .signInWithAppleButtonStyle(.black)
-                    .frame(height: 50)
-                    .cornerRadius(25)
-                    .padding(.horizontal, 30)
-                    .onTapGesture {
+                    // Apple Sign In Button (Disabled for personal developer account)
+                    Button(action: {
                         authManager.signInWithApple()
+                    }) {
+                        HStack {
+                            Image(systemName: "applelogo")
+                                .font(.title3)
+                                .foregroundColor(.white)
+                            Text("Sign in with Apple")
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundColor(.white)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.black)
+                        .cornerRadius(25)
                     }
+                    .padding(.horizontal, 30)
+                    .disabled(true)
+                    .opacity(0.5)
+                    
+                    Text("⚠️ Apple Sign-In requires paid developer account")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                        .padding(.horizontal, 30)
                     
                     // Continue without signing in
                     Button("Continue without signing in") {
@@ -61,6 +71,26 @@ struct AuthenticationView: View {
                     .font(.subheadline)
                     .foregroundColor(AppColors.textSecondary)
                     .padding(.top, 10)
+                    
+                    // Test authentication button
+                    Button(action: {
+                        simulateTestAuthentication()
+                    }) {
+                        HStack {
+                            Image(systemName: "person.badge.plus")
+                                .font(.title3)
+                            Text("Demo Authentication")
+                                .font(.body)
+                                .fontWeight(.medium)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .foregroundColor(.white)
+                        .background(AppColors.primary)
+                        .cornerRadius(25)
+                    }
+                    .padding(.horizontal, 30)
+                    .padding(.top, 20)
                 }
                 
                 Spacer()
@@ -114,10 +144,32 @@ struct AuthenticationView: View {
             }
             .background(AppColors.backgroundPrimary)
         }
-        .environmentObject(authManager)
+    }
+    
+    private func simulateTestAuthentication() {
+        print("🧪 Demo Authentication button tapped")
+        
+        // Create a test user to demonstrate the personalized greeting
+        let testUser = AuthenticatedUser(
+            id: "test-user-123",
+            displayName: "John Doe",
+            email: "john.doe@example.com",
+            provider: .apple
+        )
+        
+        print("🧪 Created test user: \(testUser.displayName)")
+        
+        // Simulate successful authentication
+        authManager.currentUser = testUser
+        authManager.isAuthenticated = true
+        authManager.authProvider = .apple
+        authManager.authError = nil
+        
+        print("🧪 Authentication state updated: isAuthenticated = \(authManager.isAuthenticated)")
     }
 }
 
 #Preview {
     AuthenticationView()
+        .environmentObject(AuthenticationManager())
 }

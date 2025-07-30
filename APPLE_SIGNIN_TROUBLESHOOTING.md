@@ -23,12 +23,64 @@ ASAuthorizationController credential request failed with error: Code=1000
 - Enable "Sign In with Apple" capability in Xcode
 - Configure capability in Apple Developer Portal
 
-#### 3. **MCPasscodeManager Warnings** (Can be ignored)
+#### 3. **Authorization Error -7003**
 ```
+Authorization failed: Error Domain=AKAuthenticationError Code=-7003
+```
+**Cause**: Apple ID not signed in or not verified on device
+**Solutions**:
+- Sign in to Apple ID in iOS Settings
+- Verify Apple ID account is active
+- Check network connectivity
+
+#### 4. **ASAuthorizationController Error 1001**
+```
+ASAuthorizationController credential request failed with error: Code=1001
+```
+**Cause**: User canceled authentication or Apple ID authentication failed
+**Solutions**:
+- Ensure you're signed in to Apple ID
+- Try authentication again
+- Check Apple ID account status
+
+#### 5. **Simulator Warnings** (Can be ignored)
+```
+load_eligibility_plist: Failed to open /Users/.../eligibility.plist: No such file or directory
+Failed to send CA Event for app launch measurements...
 MCPasscodeManager passcode set check is not supported on this device
 ```
-**Cause**: Simulator limitation - these are warnings, not errors
-**Solution**: Test on physical device, or ignore these warnings
+**Cause**: Normal simulator limitations - these are warnings, not errors
+**Solutions**: 
+- These warnings are completely normal in simulator
+- They don't affect your app functionality
+- Test on physical device for cleaner console output
+- Or simply ignore these warnings
+
+## 🆘 Current Issue - Error -7003 & 1001
+
+**Your Current Error Status:**
+- ✅ Apple Sign-In capability is now properly configured (no more Error 1000)
+- ❌ Apple ID authentication is failing (Error -7003, 1001)
+
+**Immediate Steps to Fix:**
+
+### Option 1: Use Simulator with Proper Apple ID Setup
+1. **Open iOS Simulator Settings**
+2. **Go to Apple ID section (at top)**
+3. **Sign in with a valid Apple ID**
+4. **Ensure you're signed in to iCloud**
+5. **Try Apple Sign-In again**
+
+### Option 2: Test on Physical Device
+1. **Go to Settings > [Your Name] on your iPhone**
+2. **Verify you're signed in to Apple ID**
+3. **Check Sign-In & Security settings**
+4. **Run the app on your physical device**
+
+### Option 3: Use Simulation Mode (Immediate Testing)
+1. **In the debug view, tap "Simulate User Authentication"**
+2. **This will bypass Apple Sign-In and test the UI**
+3. **You can see the personalized greeting functionality**
 
 ## 🛠️ Step-by-Step Fix
 
