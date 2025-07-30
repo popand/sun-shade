@@ -156,24 +156,44 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         isLoading = false
         
+        print("🔴 Apple Sign-In Error: \(error)")
+        
         // Handle the error
         if let authError = error as? ASAuthorizationError {
             switch authError.code {
             case .canceled:
-                self.authError = "Sign in was canceled"
+                self.authError = "Sign in was canceled by user"
+                print("ℹ️ User canceled Apple Sign-In")
             case .failed:
-                self.authError = "Sign in failed"
+                self.authError = "Sign in failed - check Apple Sign-In capability"
+                print("❌ Apple Sign-In failed - capability may not be enabled")
             case .invalidResponse:
                 self.authError = "Invalid response from Apple"
+                print("❌ Invalid response from Apple servers")
             case .notHandled:
-                self.authError = "Sign in not handled"
+                self.authError = "Sign in not handled - configuration issue"
+                print("❌ Sign-In not handled - check app configuration")
             case .unknown:
-                self.authError = "Unknown error occurred"
+                self.authError = "Unknown error - check device settings"
+                print("❌ Unknown Apple Sign-In error")
             @unknown default:
                 self.authError = "Unexpected error occurred"
+                print("❌ Unexpected Apple Sign-In error")
             }
         } else {
-            self.authError = error.localizedDescription
+            self.authError = "Authentication error: \(error.localizedDescription)"
+            print("❌ General authentication error: \(error)")
+        }
+        
+        // Additional debugging for common issues
+        if error.localizedDescription.contains("1000") {
+            print("💡 Error 1000 usually means Apple Sign-In capability is not enabled")
+            self.authError = "Apple Sign-In not configured. Enable 'Sign In with Apple' capability in Xcode."
+        }
+        
+        if error.localizedDescription.contains("-7026") {
+            print("💡 Error -7026 usually means Apple ID authentication issue")
+            self.authError = "Apple ID authentication failed. Check device Apple ID settings."
         }
     }
 }
