@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @StateObject private var viewModel = DashboardViewModel()
+    @ObservedObject var viewModel: DashboardViewModel
     @EnvironmentObject var authManager: AuthenticationManager
     
     var body: some View {
@@ -22,10 +22,6 @@ struct DashboardView: View {
             .refreshable {
                 await viewModel.refreshData()
             }
-        }
-        .onAppear {
-            // Update greeting when user authentication state changes
-            viewModel.updateGreetingForUser(authManager.userDisplayName)
         }
     }
 }

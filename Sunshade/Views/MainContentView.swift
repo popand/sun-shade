@@ -2,19 +2,20 @@ import SwiftUI
 
 struct MainContentView: View {
     @StateObject private var authManager = AuthenticationManager()
+    @StateObject private var dashboardViewModel = DashboardViewModel()
     
     var body: some View {
         Group {
             if authManager.isAuthenticated {
                 TabView {
-                    DashboardView()
+                    DashboardView(viewModel: dashboardViewModel)
                         .environmentObject(authManager)
                         .tabItem {
                             Image(systemName: "sun.max.fill")
                             Text("Dashboard")
                         }
                     
-                    SafetyTimerView()
+                    SafetyTimerView(dashboardViewModel: dashboardViewModel)
                         .tabItem {
                             Image(systemName: "timer")
                             Text("Timer")
@@ -35,6 +36,12 @@ struct MainContentView: View {
         }
         .onAppear {
             authManager.checkAuthenticationStatus()
+        }
+        .onChange(of: authManager.isAuthenticated) { isAuthenticated in
+            if isAuthenticated {
+                // Update greeting when user becomes authenticated
+                dashboardViewModel.updateGreetingForUser(authManager.userDisplayName)
+            }
         }
     }
 }
