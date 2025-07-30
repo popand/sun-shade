@@ -195,6 +195,16 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             print("💡 Error -7026 usually means Apple ID authentication issue")
             self.authError = "Apple ID authentication failed. Check device Apple ID settings."
         }
+        
+        if error.localizedDescription.contains("-7003") {
+            print("💡 Error -7003 means Apple ID is not signed in or not verified")
+            self.authError = "Apple ID not signed in. Please sign in to Apple ID in Settings."
+        }
+        
+        if error.localizedDescription.contains("1001") {
+            print("💡 Error 1001 means user canceled or Apple ID authentication failed")
+            self.authError = "Authentication failed. Ensure you're signed in to Apple ID and try again."
+        }
     }
 }
 

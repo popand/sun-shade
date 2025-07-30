@@ -3,6 +3,7 @@ import SwiftUI
 struct MainContentView: View {
     @StateObject private var authManager = AuthenticationManager()
     @StateObject private var dashboardViewModel = DashboardViewModel()
+    @State private var showDebugOptions = false
     
     var body: some View {
         Group {
@@ -92,7 +93,9 @@ struct AuthenticatedProfileView: View {
                         .padding(.top, 4)
                     }
                 }
-                .padding()
+                .padding(.vertical, 20)
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity)
                 .background(Color.white)
                 .cornerRadius(16)
                 .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
@@ -127,7 +130,9 @@ struct AuthenticatedProfileView: View {
                         action: { showingSignOutAlert = true }
                     )
                 }
-                .padding()
+                .padding(.vertical, 16)
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity)
                 .background(Color.white)
                 .cornerRadius(16)
                 .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
