@@ -92,6 +92,11 @@ iOSInjectionProject/
 # Configuration files containing secrets
 Configuration.plist
 SunSmart/Configuration.plist
+Sunshade/Configuration.plist
+
+# Google Services configuration
+GoogleService-Info.plist
+Sunshade/GoogleService-Info.plist
 
 # Environment variables
 .env
