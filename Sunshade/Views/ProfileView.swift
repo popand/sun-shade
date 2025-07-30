@@ -78,7 +78,7 @@ struct ProfileView: View {
                             }
                         }
                         
-                        Text("SunSmart User")
+                        Text("Sunshade User")
                             .font(.subheadline)
                             .foregroundColor(AppColors.textSecondary)
                     }
