@@ -13,7 +13,7 @@ struct PrivacyNoticeView: View {
                     
                     Group {
                         SectionView(title: "Information We Collect") {
-                            Text("SunSmart may collect the following information:\n• Location data (with your permission) for UV index information\n• Usage patterns and app interactions\n• Device information for optimal app performance\n• Sun exposure session data (stored locally on your device)")
+                            Text("Sunshade may collect the following information:\n• Location data (with your permission) for UV index information\n• Usage patterns and app interactions\n• Device information for optimal app performance\n• Sun exposure session data (stored locally on your device)")
                         }
                         
                         SectionView(title: "How We Use Your Information") {
@@ -29,7 +29,7 @@ struct PrivacyNoticeView: View {
                         }
                         
                         SectionView(title: "Third-Party Services") {
-                            Text("SunSmart uses weather APIs to provide UV index information. These services have their own privacy policies. We do not share your personal information with these services beyond what's necessary for functionality.")
+                            Text("Sunshade uses weather APIs to provide UV index information. These services have their own privacy policies. We do not share your personal information with these services beyond what's necessary for functionality.")
                         }
                         
                         SectionView(title: "Data Retention") {
@@ -41,7 +41,7 @@ struct PrivacyNoticeView: View {
                         }
                         
                         SectionView(title: "Children's Privacy") {
-                            Text("SunSmart is not intended for children under 13. We do not knowingly collect personal information from children under 13. If you believe we have collected such information, please contact us immediately.")
+                            Text("Sunshade is not intended for children under 13. We do not knowingly collect personal information from children under 13. If you believe we have collected such information, please contact us immediately.")
                         }
                         
                         SectionView(title: "Changes to This Privacy Notice") {

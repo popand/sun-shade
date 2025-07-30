@@ -1,6 +1,6 @@
-# SunSmart 🌞
+# Sunshade 🌞
 
-A comprehensive iOS app for UV index monitoring and sun safety, built with SwiftUI. SunSmart helps users stay safe in the sun by providing real-time UV data, personalized recommendations, and exposure tracking.
+A comprehensive iOS app for UV index monitoring and sun safety, built with SwiftUI. Sunshade helps users stay safe in the sun by providing real-time UV data, personalized recommendations, and exposure tracking.
 
 ## Features
 
@@ -98,7 +98,7 @@ A comprehensive iOS app for UV index monitoring and sun safety, built with Swift
 
 ### Configuration
 1. Clone the repository
-2. Open `SunSmart.xcodeproj` in Xcode
+2. Open `Sunshade.xcodeproj` in Xcode
 3. Add your OpenWeatherMap API key to `Configuration.swift`
 4. Enable location permissions in your iOS simulator/device
 5. Build and run the project
@@ -114,7 +114,7 @@ Get your free API key from [OpenWeatherMap](https://openweathermap.org/api).
 ## App Structure
 
 ```
-SunSmart/
+Sunshade/
 ├── Models/
 │   ├── DashboardViewModel.swift    # Main app state management
 │   ├── WeatherData.swift          # Weather and forecast models
