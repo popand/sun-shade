@@ -1,17 +1,17 @@
 # Configuration Setup Guide
 
-This guide explains how to set up API keys and configuration values securely for the SunSmart app.
+This guide explains how to set up API keys and configuration values securely for the Sunshade app.
 
 ## Quick Setup
 
 1. **Copy the configuration template:**
    ```bash
-   cp Configuration.example.plist SunSmart/Configuration.plist
+   cp Configuration.example.plist Sunshade/Configuration.plist
    ```
 
 2. **Add your OpenWeatherMap API key:**
    - Get a free API key from https://openweathermap.org/api
-   - Edit `SunSmart/Configuration.plist`
+   - Edit `Sunshade/Configuration.plist`
    - Replace `YOUR_OPENWEATHERMAP_API_KEY_HERE` with your actual API key
 
 3. **Verify the setup:**
@@ -48,7 +48,7 @@ This guide explains how to set up API keys and configuration values securely for
 ## Troubleshooting
 
 **"Configuration.plist not found" warning:**
-- Copy `Configuration.example.plist` to `SunSmart/Configuration.plist`
+- Copy `Configuration.example.plist` to `Sunshade/Configuration.plist`
 - Make sure the file is in the correct location
 
 **App using mock weather data:**

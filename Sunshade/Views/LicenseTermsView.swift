@@ -13,15 +13,15 @@ struct LicenseTermsView: View {
                     
                     Group {
                         SectionView(title: "1. Acceptance of Terms") {
-                            Text("By downloading, installing, or using the SunSmart application, you agree to be bound by these Terms of Use. If you do not agree to these terms, please do not use the application.")
+                            Text("By downloading, installing, or using the Sunshade application, you agree to be bound by these Terms of Use. If you do not agree to these terms, please do not use the application.")
                         }
                         
                         SectionView(title: "2. License Grant") {
-                            Text("SunSmart grants you a limited, non-exclusive, non-transferable license to use this application for personal, non-commercial purposes in accordance with these terms.")
+                            Text("Sunshade grants you a limited, non-exclusive, non-transferable license to use this application for personal, non-commercial purposes in accordance with these terms.")
                         }
                         
                         SectionView(title: "3. Permitted Use") {
-                            Text("You may use SunSmart for:\n• Personal UV exposure monitoring\n• Educational purposes related to sun safety\n• Tracking your sun exposure habits\n• Accessing weather and UV index information")
+                            Text("You may use Sunshade for:\n• Personal UV exposure monitoring\n• Educational purposes related to sun safety\n• Tracking your sun exposure habits\n• Accessing weather and UV index information")
                         }
                         
                         SectionView(title: "4. Prohibited Use") {
@@ -29,7 +29,7 @@ struct LicenseTermsView: View {
                         }
                         
                         SectionView(title: "5. Intellectual Property") {
-                            Text("All content, features, and functionality of SunSmart are owned by the developers and are protected by international copyright, trademark, and other intellectual property laws.")
+                            Text("All content, features, and functionality of Sunshade are owned by the developers and are protected by international copyright, trademark, and other intellectual property laws.")
                         }
                         
                         SectionView(title: "6. Updates and Modifications") {
