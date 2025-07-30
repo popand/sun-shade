@@ -4,24 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Sunshade is an iOS app built with SwiftUI that provides UV index monitoring and sun safety features. The app uses the OpenWeatherMap API for real-time weather and UV data, implements location services, and provides personalized safety recommendations.
+SunSmart is an iOS app built with SwiftUI that provides UV index monitoring and sun safety features. The app uses the OpenWeatherMap API for real-time weather and UV data, implements location services, and provides personalized safety recommendations.
 
 ## Development Commands
 
 ### Building and Testing
 ```bash
 # Open project in Xcode
-open Sunshade.xcodeproj
+open SunSmart.xcodeproj
 
 # Build from command line
-xcodebuild -project Sunshade.xcodeproj -scheme Sunshade build
+xcodebuild -project SunSmart.xcodeproj -scheme SunSmart build
 
 # Run tests
-xcodebuild -project Sunshade.xcodeproj -scheme Sunshade test
+xcodebuild -project SunSmart.xcodeproj -scheme SunSmart test
 ```
 
 ### Configuration Setup
-1. Copy `Configuration.example.plist` to `Sunshade/Configuration.plist`
+1. Copy `Configuration.example.plist` to `SunSmart/Configuration.plist`
 2. Add your OpenWeatherMap API key to the configuration file
 3. The app checks `Configuration.shared.isAPIKeyConfigured` before making API calls
 
@@ -88,8 +88,8 @@ xcodebuild -project Sunshade.xcodeproj -scheme Sunshade test
 - Use `@StateObject` for ViewModel initialization
 
 ### Testing
-- Unit tests in `SunshadeTests/`
-- UI tests in `SunshadeUITests/`
+- Unit tests in `SunSmartTests/`
+- UI tests in `SunSmartUITests/`
 - Mock data available via `WeatherService.getMockWeatherData()`
 
 ## Common Patterns
