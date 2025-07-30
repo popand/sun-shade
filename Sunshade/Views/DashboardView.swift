@@ -2,12 +2,13 @@ import SwiftUI
 
 struct DashboardView: View {
     @ObservedObject var viewModel: DashboardViewModel
+    @EnvironmentObject var authManager: AuthenticationManager
     
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
-                    HeaderSection(viewModel: viewModel)
+                    HeaderSection(viewModel: viewModel, authManager: authManager)
                     UVIndexCard(viewModel: viewModel)
                     WeatherCard(viewModel: viewModel)
                     SafetyCard(viewModel: viewModel)
@@ -16,7 +17,7 @@ struct DashboardView: View {
                 .padding(.vertical)
             }
             .background(AppColors.backgroundPrimary)
-            .navigationTitle("Sun Smart")
+            .navigationTitle("Sunshade")
             .navigationBarTitleDisplayMode(.large)
             .refreshable {
                 await viewModel.refreshData()
