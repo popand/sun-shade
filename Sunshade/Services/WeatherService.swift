@@ -179,7 +179,11 @@ class WeatherService: ObservableObject {
                     icon: ["01d", "02d", "03d", "10d"].randomElement() ?? "01d"
                 )],
                 clouds: Clouds(all: Int.random(in: 10...80)),
-                wind: Wind(speed: Double.random(in: 2...15))
+                wind: Wind(speed: Double.random(in: 2...15)),
+                visibility: Int.random(in: 8000...10000),
+                pop: Double.random(in: 0...0.3),
+                sys: nil,
+                dt_txt: DateFormatter().string(from: date)
             ))
         }
         
