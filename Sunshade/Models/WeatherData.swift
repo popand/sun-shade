@@ -19,6 +19,14 @@ struct ForecastItem: Codable {
     let weather: [WeatherCondition]
     let clouds: Clouds
     let wind: Wind?
+    let visibility: Int?
+    let pop: Double?
+    let sys: SysInfo?
+    let dt_txt: String?
+    
+    private enum CodingKeys: String, CodingKey {
+        case dt, main, weather, clouds, wind, visibility, pop, sys, dt_txt
+    }
 }
 
 struct MainWeather: Codable {
@@ -38,6 +46,10 @@ struct Wind: Codable {
 
 struct City: Codable {
     let name: String
+}
+
+struct SysInfo: Codable {
+    let pod: String?
 }
 
 struct CurrentWeather: Codable {

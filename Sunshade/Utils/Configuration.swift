@@ -25,6 +25,6 @@ struct Configuration {
     
     // Add other configuration values here as needed
     var weatherAPIBaseURL: String {
-        return configDict["WeatherAPIBaseURL"] as? String ?? "https://api.openweathermap.org/data/3.0/onecall"
+        return configDict["WeatherAPIBaseURL"] as? String ?? "https://api.openweathermap.org/data/2.5/forecast"
     }
 }
