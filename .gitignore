@@ -96,3 +96,6 @@ SunSmart/Configuration.plist
 # Environment variables
 .env
 .env.local
+
+# Claude Code documentation
+CLAUDE.md
