@@ -47,7 +47,7 @@ class WeatherService: ObservableObject {
         }
     }
     
-    func fetchWeatherData(for location: CLLocation) async throws -> WeatherData {
+    func fetchWeatherData(for location: CLLocation, locationName: String = "") async throws -> WeatherData {
         guard configuration.isAPIKeyConfigured else {
             throw WeatherError.missingAPIKey
         }
@@ -55,11 +55,14 @@ class WeatherService: ObservableObject {
         // Debug: Log the location being used for both APIs
         print("📍 LOCATION DEBUG:")
         print("   🗺️ Input Location: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+        if !locationName.isEmpty {
+            print("   📍 Location Name: \(locationName)")
+        }
         print("   🌐 Will use same coordinates for both Weather and UV APIs")
         
         // Fetch weather data and UV index concurrently
         async let weatherDataTask = fetchForecastData(for: location)
-        async let uvIndexTask = fetchUVIndex(for: location)
+        async let uvIndexTask = fetchUVIndex(for: location, locationName: locationName)
         
         do {
             let forecastResponse = try await weatherDataTask
@@ -90,7 +93,7 @@ class WeatherService: ObservableObject {
         return try JSONDecoder().decode(WeatherResponseForecast.self, from: data)
     }
     
-    private func fetchUVIndex(for location: CLLocation) async throws -> UVIndexResponse? {
+    private func fetchUVIndex(for location: CLLocation, locationName: String = "") async throws -> UVIndexResponse? {
         guard let url = buildUVIndexURL(for: location) else {
             throw WeatherError.invalidURL
         }
@@ -107,6 +110,9 @@ class WeatherService: ObservableObject {
             print("🌞 UV API SUCCESS:")
             print("   ☀️ UV Index: \(uvResponse.value)")
             print("   📍 Response Coordinates: \(uvResponse.lat), \(uvResponse.lon)")
+            if !locationName.isEmpty {
+                print("   🏙️ Location: \(locationName)")
+            }
             print("   📅 Date: \(uvResponse.date_iso)")
             return uvResponse
             

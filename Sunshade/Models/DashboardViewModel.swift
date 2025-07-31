@@ -125,7 +125,9 @@ class DashboardViewModel: ObservableObject {
         weatherError = nil
         
         do {
-            let weatherData = try await weatherService.fetchWeatherData(for: location)
+            // Only pass location name if it's not a loading/error state
+            let locationName = currentLocation.starts(with: "Loading") || currentLocation.starts(with: "Location access") || currentLocation.starts(with: "Location permission") ? "" : currentLocation
+            let weatherData = try await weatherService.fetchWeatherData(for: location, locationName: locationName)
             
 
             
