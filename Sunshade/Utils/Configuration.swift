@@ -59,6 +59,11 @@ struct Configuration {
         }
         
         return nil
+        //return configDict["OpenWeatherMapAPIKey"] as? String ?? "YOUR_OPENWEATHERMAP_API_KEY"
+    }
+    
+    var isAPIKeyConfigured: Bool {
+        return openWeatherMapAPIKey != "YOUR_OPENWEATHERMAP_API_KEY" && !openWeatherMapAPIKey.isEmpty
     }
     
     // Add other configuration values here as needed
