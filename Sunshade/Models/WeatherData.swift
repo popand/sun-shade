@@ -97,8 +97,11 @@ struct ForecastDay {
     
     init(from dailyWeather: DailyWeather) {
         self.date = Date(timeIntervalSince1970: dailyWeather.dt)
-        self.highTemp = Int(dailyWeather.temp.max.rounded())
-        self.lowTemp = Int(dailyWeather.temp.min.rounded())
+        // Convert from Fahrenheit (if using imperial units) to Celsius for internal storage
+        let highTempCelsius = (dailyWeather.temp.max - 32) * 5/9
+        let lowTempCelsius = (dailyWeather.temp.min - 32) * 5/9
+        self.highTemp = Int(highTempCelsius.rounded())
+        self.lowTemp = Int(lowTempCelsius.rounded())
         self.uvIndex = dailyWeather.uvi
         self.cloudCover = dailyWeather.clouds
         self.condition = dailyWeather.weather.first?.main ?? "Clear"
@@ -178,7 +181,9 @@ struct WeatherData {
         // Use the first forecast item for current weather
         let currentItem = forecastResponse.list.first
         
-        self.temperature = currentItem?.main.temp ?? 70.0
+        // Convert from Fahrenheit (API returns imperial units) to Celsius for internal storage
+        let tempInFahrenheit = currentItem?.main.temp ?? 70.0
+        self.temperature = (tempInFahrenheit - 32) * 5/9
         self.humidity = currentItem?.main.humidity ?? 50
         self.cloudCover = currentItem?.clouds.all ?? 20
         self.condition = currentItem?.weather.first?.main ?? "Clear"
@@ -206,7 +211,8 @@ struct WeatherData {
     }
     
     init(from onecallResponse: WeatherResponseOnecall) {
-        self.temperature = onecallResponse.current.temp
+        // Convert from Fahrenheit (if using imperial units) to Celsius for internal storage
+        self.temperature = (onecallResponse.current.temp - 32) * 5/9
         self.uvIndex = onecallResponse.current.uvi
         self.humidity = onecallResponse.current.humidity
         self.cloudCover = onecallResponse.current.clouds
@@ -262,10 +268,14 @@ struct WeatherData {
         let minTemp = items.map { $0.main.temp_min }.min() ?? middayItem.main.temp_min
         let maxTemp = items.map { $0.main.temp_max }.max() ?? middayItem.main.temp_max
         
+        // Convert from Fahrenheit (API returns imperial units) to Celsius for internal storage
+        let highTempCelsius = (maxTemp - 32) * 5/9
+        let lowTempCelsius = (minTemp - 32) * 5/9
+        
         return ForecastDay(
             date: Date(timeIntervalSince1970: middayItem.dt),
-            highTemp: Int(maxTemp.rounded()),
-            lowTemp: Int(minTemp.rounded()),
+            highTemp: Int(highTempCelsius.rounded()),
+            lowTemp: Int(lowTempCelsius.rounded()),
             uvIndex: Self.estimateUVIndex(from: middayItem),
             cloudCover: middayItem.clouds.all,
             condition: middayItem.weather.first?.main ?? "Clear",

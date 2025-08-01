@@ -59,6 +59,7 @@ class WeatherService: ObservableObject {
             print("   📍 Location Name: \(locationName)")
         }
         print("   🌐 Will use same coordinates for both Weather and UV APIs")
+        print("   🌡️ Note: API returns temperatures in Fahrenheit (imperial units)")
         
         // Fetch weather data and UV index concurrently
         async let weatherDataTask = fetchForecastData(for: location)
@@ -68,13 +69,41 @@ class WeatherService: ObservableObject {
             let forecastResponse = try await weatherDataTask
             let uvIndexResponse = try await uvIndexTask
             
-            return WeatherData(from: forecastResponse, uvIndex: uvIndexResponse?.value)
+            let weatherData = WeatherData(from: forecastResponse, uvIndex: uvIndexResponse?.value)
+            
+            // Debug: Log final processed weather data
+            print("📊 PROCESSED WEATHER DATA:")
+            print("   🌡️ Internal Temperature: \(String(format: "%.1f", weatherData.temperature))°C (Converted for Storage)")
+            if let currentTemp = forecastResponse.list.first?.main.temp {
+                let convertedTemp = (currentTemp - 32) * 5/9
+                print("   🔄 Conversion Check: \(String(format: "%.1f", currentTemp))°F → \(String(format: "%.1f", convertedTemp))°C")
+            }
+            print("   ☀️ Final UV Index: \(String(format: "%.1f", weatherData.uvIndex))")
+            if !locationName.isEmpty {
+                print("   🏙️ Location: \(locationName)")
+            }
+            
+            return weatherData
             
         } catch {
             // If UV API fails, fall back to weather data only
             print("⚠️ UV API failed, using calculated UV: \(error)")
             let forecastResponse = try await fetchForecastData(for: location)
-            return WeatherData(from: forecastResponse, uvIndex: nil)
+            let weatherData = WeatherData(from: forecastResponse, uvIndex: nil)
+            
+            // Debug: Log final processed weather data (fallback)
+            print("📊 PROCESSED WEATHER DATA (Fallback):")
+            print("   🌡️ Internal Temperature: \(String(format: "%.1f", weatherData.temperature))°C (Converted for Storage)")
+            if let currentTemp = forecastResponse.list.first?.main.temp {
+                let convertedTemp = (currentTemp - 32) * 5/9
+                print("   🔄 Conversion Check: \(String(format: "%.1f", currentTemp))°F → \(String(format: "%.1f", convertedTemp))°C")
+            }
+            print("   ☀️ Final UV Index: \(String(format: "%.1f", weatherData.uvIndex)) (Calculated)")
+            if !locationName.isEmpty {
+                print("   🏙️ Location: \(locationName)")
+            }
+            
+            return weatherData
         }
     }
     
@@ -90,7 +119,21 @@ class WeatherService: ObservableObject {
             throw WeatherError.networkError("Invalid response")
         }
         
-        return try JSONDecoder().decode(WeatherResponseForecast.self, from: data)
+        let forecastResponse = try JSONDecoder().decode(WeatherResponseForecast.self, from: data)
+        
+        // Debug: Log weather API response details
+        if let currentWeather = forecastResponse.list.first {
+            print("🌤️ WEATHER API SUCCESS:")
+            print("   🌡️ Temperature: \(currentWeather.main.temp)°F (API Response)")
+            print("   🌡️ Temperature Range: \(currentWeather.main.temp_min)°F - \(currentWeather.main.temp_max)°F")
+            print("   💧 Humidity: \(currentWeather.main.humidity)%")
+            print("   ☁️ Cloud Cover: \(currentWeather.clouds.all)%")
+            print("   🌦️ Condition: \(currentWeather.weather.first?.description.capitalized ?? "Unknown")")
+            print("   📍 Response Coordinates: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+            print("   📅 Data Time: \(Date(timeIntervalSince1970: currentWeather.dt))")
+        }
+        
+        return forecastResponse
     }
     
     private func fetchUVIndex(for location: CLLocation, locationName: String = "") async throws -> UVIndexResponse? {

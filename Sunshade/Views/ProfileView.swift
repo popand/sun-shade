@@ -8,6 +8,7 @@ struct ProfileView: View {
     @State private var showingLicenseTerms = false
     @State private var showingPrivacyNotice = false
     @State private var showingLegalDisclaimer = false
+    @State private var showingAccountSettings = false
     
     // Computed properties for weekly statistics
     private var weeklyStats: (sessions: Int, totalTime: String, avgUV: String) {
@@ -125,6 +126,36 @@ struct ProfileView: View {
                 .cornerRadius(16)
                 .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                 
+                // Account Settings Section
+                VStack(spacing: 16) {
+                    HStack {
+                        Image(systemName: "gearshape")
+                            .foregroundColor(AppColors.primary)
+                            .font(.title3)
+                        
+                        Text("Account Settings")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Spacer()
+                    }
+                    
+                    VStack(spacing: 12) {
+                        LegalMenuItem(
+                            icon: "thermometer",
+                            title: "Temperature Unit",
+                            action: {
+                                showingAccountSettings = true
+                            }
+                        )
+                    }
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(16)
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                
                 // Privacy & Legal Section
                 VStack(spacing: 16) {
                     HStack {
@@ -190,6 +221,9 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showingLegalDisclaimer) {
                 LegalDisclaimerView()
+            }
+            .sheet(isPresented: $showingAccountSettings) {
+                AccountSettingsView()
             }
         }
     }
