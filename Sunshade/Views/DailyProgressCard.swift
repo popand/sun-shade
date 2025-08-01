@@ -10,7 +10,7 @@ struct DailyProgressCard: View {
                     .font(.title2)
                     .foregroundColor(AppColors.info)
                 
-                Text("Today's Progress")
+                Text("Weekly Progress")
                     .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundColor(AppColors.textPrimary)
@@ -20,7 +20,7 @@ struct DailyProgressCard: View {
             
             HStack {
                 VStack {
-                    Text("\(viewModel.sessionsToday)")
+                    Text("\(viewModel.sessionsThisWeek)")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(AppColors.primary)
@@ -33,7 +33,7 @@ struct DailyProgressCard: View {
                 Spacer()
                 
                 VStack {
-                    Text(viewModel.totalExposureToday)
+                    Text(viewModel.totalExposureThisWeek)
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(AppColors.accent)
@@ -46,12 +46,12 @@ struct DailyProgressCard: View {
                 Spacer()
                 
                 VStack {
-                    Text("75%")
+                    Text(viewModel.overExposurePercentage)
                         .font(.title)
                         .fontWeight(.bold)
-                        .foregroundColor(AppColors.success)
+                        .foregroundColor(viewModel.overExposurePercentage == "0%" ? AppColors.success : AppColors.warning)
                     
-                    Text("Daily Goal")
+                    Text("Over-exposure")
                         .font(.caption)
                         .foregroundColor(AppColors.textSecondary)
                 }

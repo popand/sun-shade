@@ -20,6 +20,7 @@ class DashboardViewModel: ObservableObject {
     private let weatherService = WeatherService()
     private let locationManager = LocationManager()
     private let userProfile = UserProfile.shared
+    private let exposureLogManager = ExposureLogManager.shared
     private var cancellables = Set<AnyCancellable>()
     
     var uvLevel: UVLevel {
@@ -65,11 +66,75 @@ class DashboardViewModel: ObservableObject {
         return recommendations
     }
     
+    var sessionsThisWeek: Int {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        
+        return exposureLogManager.sessions.filter { session in
+            session.startTime >= startOfWeek
+        }.count
+    }
+    
+    var totalExposureThisWeek: String {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        
+        let weekSessions = exposureLogManager.sessions.filter { session in
+            session.startTime >= startOfWeek
+        }
+        
+        let totalMinutes = weekSessions.reduce(0) { total, session in
+            total + (session.duration / 60)
+        }
+        
+        let hours = Int(totalMinutes) / 60
+        let minutes = Int(totalMinutes) % 60
+        
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        } else {
+            return "\(minutes) min"
+        }
+    }
+    
+    var overExposurePercentage: String {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        
+        let weekSessions = exposureLogManager.sessions.filter { session in
+            session.startTime >= startOfWeek
+        }
+        
+        var totalOverExposure: TimeInterval = 0
+        var totalExposure: TimeInterval = 0
+        
+        for session in weekSessions {
+            totalExposure += session.duration
+            
+            // Calculate safe exposure time for this session's UV index
+            let safeTimeMinutes = max(15, Int(120 / max(session.uvIndex, 1.0)))
+            let safeTimeSeconds = TimeInterval(safeTimeMinutes * 60)
+            
+            if session.duration > safeTimeSeconds {
+                totalOverExposure += (session.duration - safeTimeSeconds)
+            }
+        }
+        
+        guard totalExposure > 0 else { return "0%" }
+        
+        let percentage = (totalOverExposure / totalExposure) * 100
+        return "\(Int(percentage.rounded()))%"
+    }
+    
     init() {
         updateGreeting()
         setupLocationObserver()
         setupPeriodicGreetingUpdate()
         setupUserProfileObserver()
+        setupExposureLogObserver()
     }
     
     private func setupLocationObserver() {
@@ -130,6 +195,15 @@ class DashboardViewModel: ObservableObject {
         userProfile.$temperatureUnit
             .sink { [weak self] _ in
                 // Force view update by triggering objectWillChange
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func setupExposureLogObserver() {
+        exposureLogManager.$sessions
+            .sink { [weak self] _ in
+                // Force view update when sessions change
                 self?.objectWillChange.send()
             }
             .store(in: &cancellables)
