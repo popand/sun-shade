@@ -66,24 +66,20 @@ class DashboardViewModel: ObservableObject {
         return recommendations
     }
     
-    var sessionsThisWeek: Int {
+    private var weeklySessionsCache: (startOfWeek: Date, sessions: [ExposureSession]) {
         let calendar = Calendar.current
         let now = Date()
         let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
-        
-        return exposureLogManager.sessions.filter { session in
-            session.startTime >= startOfWeek
-        }.count
+        let weekSessions = exposureLogManager.sessions.filter { $0.startTime >= startOfWeek }
+        return (startOfWeek, weekSessions)
+    }
+    
+    var sessionsThisWeek: Int {
+        return weeklySessionsCache.sessions.count
     }
     
     var totalExposureThisWeek: String {
-        let calendar = Calendar.current
-        let now = Date()
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
-        
-        let weekSessions = exposureLogManager.sessions.filter { session in
-            session.startTime >= startOfWeek
-        }
+        let weekSessions = weeklySessionsCache.sessions
         
         let totalMinutes = weekSessions.reduce(0) { total, session in
             total + (session.duration / 60)
@@ -100,13 +96,7 @@ class DashboardViewModel: ObservableObject {
     }
     
     var overExposurePercentage: String {
-        let calendar = Calendar.current
-        let now = Date()
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
-        
-        let weekSessions = exposureLogManager.sessions.filter { session in
-            session.startTime >= startOfWeek
-        }
+        let weekSessions = weeklySessionsCache.sessions
         
         var totalOverExposure: TimeInterval = 0
         var totalExposure: TimeInterval = 0
