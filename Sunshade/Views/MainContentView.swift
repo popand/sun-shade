@@ -51,6 +51,7 @@ struct AuthenticatedProfileView: View {
     @EnvironmentObject var authManager: AuthenticationManager
     @State private var showingSignOutAlert = false
     @State private var showingAccountSettings = false
+    @State private var showingPrivacySettings = false
     
     var body: some View {
         NavigationView {
@@ -111,8 +112,8 @@ struct AuthenticatedProfileView: View {
                     
                     ProfileActionRow(
                         icon: "shield.checkerboard",
-                        title: "Privacy Settings",
-                        action: { /* Privacy */ }
+                        title: "Privacy Notice",
+                        action: { showingPrivacySettings = true }
                     )
                     
                     ProfileActionRow(
@@ -155,6 +156,9 @@ struct AuthenticatedProfileView: View {
         }
         .sheet(isPresented: $showingAccountSettings) {
             AccountSettingsView()
+        }
+        .sheet(isPresented: $showingPrivacySettings) {
+            PrivacyNoticeView()
         }
     }
 }
