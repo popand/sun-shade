@@ -26,6 +26,21 @@ class DashboardViewModel: ObservableObject {
         UVLevel.level(for: currentUVIndex)
     }
     
+    var formattedTemperature: String {
+        let tempInUserUnit = userProfile.temperatureUnit.convert(from: Double(temperature))
+        return "\(Int(tempInUserUnit.rounded()))\(userProfile.temperatureUnit.symbol)"
+    }
+    
+    func formatTemperature(_ tempInCelsius: Double) -> String {
+        let tempInUserUnit = userProfile.temperatureUnit.convert(from: tempInCelsius)
+        return "\(Int(tempInUserUnit.rounded()))\(userProfile.temperatureUnit.symbol)"
+    }
+    
+    func formatTemperatureValue(_ tempInCelsius: Int) -> Int {
+        let tempInUserUnit = userProfile.temperatureUnit.convert(from: Double(tempInCelsius))
+        return Int(tempInUserUnit.rounded())
+    }
+    
     var safeExposureTime: String {
         let baseTime = max(15, Int(120 / max(currentUVIndex, 1.0)))
         return "\(baseTime) minutes"
@@ -110,6 +125,14 @@ class DashboardViewModel: ObservableObject {
                 self?.updateGreeting()
             }
             .store(in: &cancellables)
+        
+        // Observe temperature unit changes to trigger view updates
+        userProfile.$temperatureUnit
+            .sink { [weak self] _ in
+                // Force view update by triggering objectWillChange
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
     }
     
     private func updateGreeting() {
@@ -132,6 +155,7 @@ class DashboardViewModel: ObservableObject {
 
             
             currentUVIndex = weatherData.uvIndex
+            // weatherData.temperature is already in Celsius (converted in WeatherData init)
             temperature = Int(weatherData.temperature.rounded())
             weatherCondition = weatherData.description
             cloudCover = weatherData.cloudCover
@@ -145,6 +169,7 @@ class DashboardViewModel: ObservableObject {
             // Use mock data as fallback only when API fails
             let mockData = weatherService.getMockWeatherData()
             currentUVIndex = mockData.uvIndex
+            // mockData.temperature is already in Celsius (converted in WeatherData init)
             temperature = Int(mockData.temperature.rounded())
             weatherCondition = mockData.description
             cloudCover = mockData.cloudCover

@@ -50,6 +50,7 @@ struct MainContentView: View {
 struct AuthenticatedProfileView: View {
     @EnvironmentObject var authManager: AuthenticationManager
     @State private var showingSignOutAlert = false
+    @State private var showingAccountSettings = false
     
     var body: some View {
         NavigationView {
@@ -105,7 +106,7 @@ struct AuthenticatedProfileView: View {
                     ProfileActionRow(
                         icon: "gear",
                         title: "Account Settings",
-                        action: { /* Settings */ }
+                        action: { showingAccountSettings = true }
                     )
                     
                     ProfileActionRow(
@@ -151,6 +152,9 @@ struct AuthenticatedProfileView: View {
             }
         } message: {
             Text("Are you sure you want to sign out?")
+        }
+        .sheet(isPresented: $showingAccountSettings) {
+            AccountSettingsView()
         }
     }
 }

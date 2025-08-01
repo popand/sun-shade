@@ -235,6 +235,7 @@ struct ActivityLogCard: View {
 
 struct ExposureSessionRow: View {
     let session: ExposureSession
+    @ObservedObject private var userProfile = UserProfile.shared
     
     var body: some View {
         HStack(spacing: 12) {
@@ -305,7 +306,7 @@ struct ExposureSessionRow: View {
                         .font(.caption)
                         .foregroundColor(AppColors.textMuted)
                     
-                    Text("\(session.temperature)°F")
+                    Text("\(Int(userProfile.temperatureUnit.convert(from: Double(session.temperature)).rounded()))°\(userProfile.temperatureUnit.symbol)")
                         .font(.caption)
                         .foregroundColor(AppColors.textSecondary)
                 }

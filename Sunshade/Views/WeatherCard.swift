@@ -24,7 +24,7 @@ struct WeatherCard: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("\(viewModel.temperature)°F")
+                        Text(viewModel.formattedTemperature)
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(AppColors.textPrimary)
@@ -119,6 +119,7 @@ struct WeatherCard: View {
 struct ForecastRowView: View {
     let day: ForecastDay
     let isToday: Bool
+    @ObservedObject private var userProfile = UserProfile.shared
     
     var body: some View {
         HStack(spacing: 8) {
@@ -137,7 +138,7 @@ struct ForecastRowView: View {
             
             // Temperature Range
             HStack(spacing: 2) {
-                Text("\(day.highTemp)°")
+                Text("\(Int(userProfile.temperatureUnit.convert(from: Double(day.highTemp)).rounded()))°")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(AppColors.textPrimary)
@@ -149,7 +150,7 @@ struct ForecastRowView: View {
                     .foregroundColor(AppColors.textMuted)
                     .lineLimit(1)
                 
-                Text("\(day.lowTemp)°")
+                Text("\(Int(userProfile.temperatureUnit.convert(from: Double(day.lowTemp)).rounded()))°")
                     .font(.subheadline)
                     .foregroundColor(AppColors.textMuted)
                     .lineLimit(1)
