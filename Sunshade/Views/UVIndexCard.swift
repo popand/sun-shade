@@ -72,21 +72,23 @@ struct UVIndexCard: View {
             .background(AppColors.info.opacity(0.1))
             .cornerRadius(12)
             
-            HStack(spacing: 12) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(AppColors.warning)
-                    .font(.title3)
-                
-                Text("High UV levels detected. Use sun protection.")
-                    .font(.subheadline)
-                    .foregroundColor(AppColors.textSecondary)
-                    .multilineTextAlignment(.leading)
-                
-                Spacer()
+            if viewModel.currentUVIndex >= 6 {
+                HStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(AppColors.warning)
+                        .font(.title3)
+                    
+                    Text("High UV levels detected. Use sun protection.")
+                        .font(.subheadline)
+                        .foregroundColor(AppColors.textSecondary)
+                        .multilineTextAlignment(.leading)
+                    
+                    Spacer()
+                }
+                .padding(16)
+                .background(AppColors.warning.opacity(0.1))
+                .cornerRadius(12)
             }
-            .padding(16)
-            .background(AppColors.warning.opacity(0.1))
-            .cornerRadius(12)
         }
         .padding(24)
         .background(Color.white)
