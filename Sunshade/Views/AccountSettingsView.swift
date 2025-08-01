@@ -2,7 +2,6 @@ import SwiftUI
 
 struct AccountSettingsView: View {
     @ObservedObject private var userProfile = UserProfile.shared
-    @State private var selectedTemperatureUnit: TemperatureUnit = .celsius
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
@@ -27,9 +26,8 @@ struct AccountSettingsView: View {
                         ForEach(TemperatureUnit.allCases, id: \.self) { unit in
                             TemperatureUnitRow(
                                 unit: unit,
-                                isSelected: selectedTemperatureUnit == unit,
+                                isSelected: userProfile.temperatureUnit == unit,
                                 action: {
-                                    selectedTemperatureUnit = unit
                                     userProfile.temperatureUnit = unit
                                 }
                             )
@@ -52,9 +50,6 @@ struct AccountSettingsView: View {
                 }
                 .foregroundColor(AppColors.primary)
             )
-            .onAppear {
-                selectedTemperatureUnit = userProfile.temperatureUnit
-            }
         }
     }
 }
