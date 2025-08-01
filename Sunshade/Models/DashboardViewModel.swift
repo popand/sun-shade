@@ -20,7 +20,11 @@ class DashboardViewModel: ObservableObject {
     private let weatherService = WeatherService()
     private let locationManager = LocationManager()
     private let userProfile = UserProfile.shared
+    private let exposureLogManager = ExposureLogManager.shared
     private var cancellables = Set<AnyCancellable>()
+    
+    // Cached weekly session data to prevent O(n) filtering on every access
+    private var cachedWeeklyData: (startOfWeek: Date, sessions: [ExposureSession], cacheDate: Date)?
     
     var uvLevel: UVLevel {
         UVLevel.level(for: currentUVIndex)
@@ -65,11 +69,75 @@ class DashboardViewModel: ObservableObject {
         return recommendations
     }
     
+    private var weeklySessionsCache: (startOfWeek: Date, sessions: [ExposureSession]) {
+        let now = Date()
+        let calendar = Calendar.current
+        let currentWeekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        
+        // Check if we need to invalidate the cache (new week or sessions changed)
+        let shouldUpdateCache = cachedWeeklyData == nil || 
+                               cachedWeeklyData!.startOfWeek != currentWeekStart ||
+                               calendar.compare(cachedWeeklyData!.cacheDate, to: now, toGranularity: .minute) != .orderedSame
+        
+        if shouldUpdateCache {
+            let weekSessions = exposureLogManager.sessions.filter { $0.startTime >= currentWeekStart }
+            cachedWeeklyData = (currentWeekStart, weekSessions, now)
+        }
+        
+        return (cachedWeeklyData!.startOfWeek, cachedWeeklyData!.sessions)
+    }
+    
+    var sessionsThisWeek: Int {
+        return weeklySessionsCache.sessions.count
+    }
+    
+    var totalExposureThisWeek: String {
+        let weekSessions = weeklySessionsCache.sessions
+        
+        let totalMinutes = weekSessions.reduce(0) { total, session in
+            total + (session.duration / 60)
+        }
+        
+        let hours = Int(totalMinutes) / 60
+        let minutes = Int(totalMinutes) % 60
+        
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        } else {
+            return "\(minutes) min"
+        }
+    }
+    
+    var overExposurePercentage: String {
+        let weekSessions = weeklySessionsCache.sessions
+        
+        var totalOverExposure: TimeInterval = 0
+        var totalExposure: TimeInterval = 0
+        
+        for session in weekSessions {
+            totalExposure += session.duration
+            
+            // Calculate safe exposure time for this session's UV index
+            let safeTimeMinutes = max(15, Int(120 / max(session.uvIndex, 1.0)))
+            let safeTimeSeconds = TimeInterval(safeTimeMinutes * 60)
+            
+            if session.duration > safeTimeSeconds {
+                totalOverExposure += (session.duration - safeTimeSeconds)
+            }
+        }
+        
+        guard totalExposure > 0 else { return "0%" }
+        
+        let percentage = (totalOverExposure / totalExposure) * 100
+        return "\(Int(percentage.rounded()))%"
+    }
+    
     init() {
         updateGreeting()
         setupLocationObserver()
         setupPeriodicGreetingUpdate()
         setupUserProfileObserver()
+        setupExposureLogObserver()
     }
     
     private func setupLocationObserver() {
@@ -130,6 +198,17 @@ class DashboardViewModel: ObservableObject {
         userProfile.$temperatureUnit
             .sink { [weak self] _ in
                 // Force view update by triggering objectWillChange
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func setupExposureLogObserver() {
+        exposureLogManager.$sessions
+            .sink { [weak self] _ in
+                // Invalidate cache when sessions change
+                self?.cachedWeeklyData = nil
+                // Force view update when sessions change
                 self?.objectWillChange.send()
             }
             .store(in: &cancellables)
