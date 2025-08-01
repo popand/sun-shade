@@ -26,7 +26,7 @@ struct HeaderSection: View {
             Spacer()
             
             Button(action: {
-                viewModel.refreshData()
+                viewModel.refreshDataSync()
             }) {
                 Image(systemName: viewModel.isLoading ? "arrow.clockwise" : "arrow.clockwise")
                     .font(.title3)

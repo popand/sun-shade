@@ -205,7 +205,7 @@ class DashboardViewModel: ObservableObject {
         }
     }
     
-    func refreshData() {
+    func refreshDataSync() {
         Task {
             await refreshData()
         }
