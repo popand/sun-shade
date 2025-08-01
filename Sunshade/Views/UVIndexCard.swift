@@ -71,7 +71,6 @@ struct UVIndexCard: View {
             .padding(16)
             .background(AppColors.info.opacity(0.1))
             .cornerRadius(12)
-            .padding(.horizontal, 20)
             
             HStack(spacing: 12) {
                 Image(systemName: "exclamationmark.triangle.fill")
@@ -82,11 +81,12 @@ struct UVIndexCard: View {
                     .font(.subheadline)
                     .foregroundColor(AppColors.textSecondary)
                     .multilineTextAlignment(.leading)
+                
+                Spacer()
             }
             .padding(16)
             .background(AppColors.warning.opacity(0.1))
             .cornerRadius(12)
-            .padding(.horizontal, 20)
         }
         .padding(24)
         .background(Color.white)
