@@ -23,6 +23,9 @@ class DashboardViewModel: ObservableObject {
     private let exposureLogManager = ExposureLogManager.shared
     private var cancellables = Set<AnyCancellable>()
     
+    // Cached weekly session data to prevent O(n) filtering on every access
+    private var cachedWeeklyData: (startOfWeek: Date, sessions: [ExposureSession], cacheDate: Date)?
+    
     var uvLevel: UVLevel {
         UVLevel.level(for: currentUVIndex)
     }
@@ -67,11 +70,21 @@ class DashboardViewModel: ObservableObject {
     }
     
     private var weeklySessionsCache: (startOfWeek: Date, sessions: [ExposureSession]) {
-        let calendar = Calendar.current
         let now = Date()
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
-        let weekSessions = exposureLogManager.sessions.filter { $0.startTime >= startOfWeek }
-        return (startOfWeek, weekSessions)
+        let calendar = Calendar.current
+        let currentWeekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        
+        // Check if we need to invalidate the cache (new week or sessions changed)
+        let shouldUpdateCache = cachedWeeklyData == nil || 
+                               cachedWeeklyData!.startOfWeek != currentWeekStart ||
+                               calendar.compare(cachedWeeklyData!.cacheDate, to: now, toGranularity: .minute) != .orderedSame
+        
+        if shouldUpdateCache {
+            let weekSessions = exposureLogManager.sessions.filter { $0.startTime >= currentWeekStart }
+            cachedWeeklyData = (currentWeekStart, weekSessions, now)
+        }
+        
+        return (cachedWeeklyData!.startOfWeek, cachedWeeklyData!.sessions)
     }
     
     var sessionsThisWeek: Int {
@@ -193,6 +206,8 @@ class DashboardViewModel: ObservableObject {
     private func setupExposureLogObserver() {
         exposureLogManager.$sessions
             .sink { [weak self] _ in
+                // Invalidate cache when sessions change
+                self?.cachedWeeklyData = nil
                 // Force view update when sessions change
                 self?.objectWillChange.send()
             }
