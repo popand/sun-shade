@@ -52,6 +52,7 @@ struct AuthenticatedProfileView: View {
     @State private var showingSignOutAlert = false
     @State private var showingAccountSettings = false
     @State private var showingPrivacySettings = false
+    @State private var showingHelpSupport = false
     
     var body: some View {
         NavigationView {
@@ -119,7 +120,7 @@ struct AuthenticatedProfileView: View {
                     ProfileActionRow(
                         icon: "questionmark.circle",
                         title: "Help & Support",
-                        action: { /* Help */ }
+                        action: { showingHelpSupport = true }
                     )
                     
                     Divider()
@@ -159,6 +160,9 @@ struct AuthenticatedProfileView: View {
         }
         .sheet(isPresented: $showingPrivacySettings) {
             PrivacyNoticeView()
+        }
+        .sheet(isPresented: $showingHelpSupport) {
+            HelpSupportView()
         }
     }
 }
