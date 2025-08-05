@@ -9,6 +9,7 @@ struct ProfileView: View {
     @State private var showingPrivacyNotice = false
     @State private var showingLegalDisclaimer = false
     @State private var showingAccountSettings = false
+    @State private var showingHelpSupport = false
     
     // Computed properties for weekly statistics
     private var weeklyStats: (sessions: Int, totalTime: String, avgUV: String) {
@@ -208,6 +209,47 @@ struct ProfileView: View {
                 .cornerRadius(16)
                 .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                 
+                // Help & Support Section
+                VStack(spacing: 16) {
+                    HStack {
+                        Image(systemName: "questionmark.circle")
+                            .foregroundColor(AppColors.primary)
+                            .font(.title3)
+                        
+                        Text("Help & Support")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Spacer()
+                    }
+                    
+                    VStack(spacing: 12) {
+                        LegalMenuItem(
+                            icon: "envelope",
+                            title: "Contact Support",
+                            action: {
+                                showingHelpSupport = true
+                            }
+                        )
+                        
+                        Divider()
+                            .background(AppColors.backgroundSecondary)
+                        
+                        LegalMenuItem(
+                            icon: "book",
+                            title: "FAQs & Guides",
+                            action: {
+                                showingHelpSupport = true
+                            }
+                        )
+                    }
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(16)
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                
                 Spacer()
             }
             .padding()
@@ -224,6 +266,9 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showingAccountSettings) {
                 AccountSettingsView()
+            }
+            .sheet(isPresented: $showingHelpSupport) {
+                HelpSupportView()
             }
         }
     }
