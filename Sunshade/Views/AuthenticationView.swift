@@ -11,9 +11,10 @@ struct AuthenticationView: View {
                 
                 // App Logo and Title
                 VStack(spacing: 20) {
-                    Image(systemName: "sun.max.fill")
-                        .font(.system(size: 80))
-                        .foregroundColor(AppColors.primary)
+                    Image("SunshadeLogoNew")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 100, height: 100)
                     
                     Text("Welcome to Sunshade")
                         .font(.largeTitle)
