@@ -37,7 +37,7 @@ struct HelpSupportView: View {
                             ContactItem(
                                 icon: "envelope.fill",
                                 title: "Email Support",
-                                subtitle: "popand@gmail.com",
+                                subtitle: "sunshadeapp@gmail.com",
                                 action: {
                                     if MFMailComposeViewController.canSendMail() {
                                         showingMailComposer = true
@@ -143,7 +143,7 @@ struct HelpSupportView: View {
         }
         .sheet(isPresented: $showingMailComposer) {
             MailComposeView(
-                recipients: ["popand@gmail.com"],
+                recipients: ["sunshadeapp@gmail.com"],
                 subject: "Sunshade App Support",
                 messageBody: """
                 Hi Sunshade Support Team,
@@ -161,7 +161,7 @@ struct HelpSupportView: View {
         .alert("Mail Not Available", isPresented: $showingMailAlert) {
             Button("OK") { }
         } message: {
-            Text("Please configure a mail account in your device settings or contact us directly at popand@gmail.com")
+            Text("Please configure a mail account in your device settings or contact us directly at sunshadeapp@gmail.com")
         }
     }
 }
