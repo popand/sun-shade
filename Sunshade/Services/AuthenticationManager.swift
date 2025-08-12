@@ -89,7 +89,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         print("🔐 User signed out - cleared all authentication data from Keychain")
     }
     
-    private func saveUserSession(_ user: AuthenticatedUser, userID: String) {
+    private func saveUserSession(_ user: AuthenticatedUser, userID: String) throws {
         do {
             // Save user ID for credential state checking
             try keychainService.saveAppleUserID(userID)
@@ -100,8 +100,12 @@ class AuthenticationManager: NSObject, ObservableObject {
             print("🔐 Saved user session to Keychain: \(user.displayName)")
         } catch {
             print("❌ Failed to save user session to Keychain: \(error.localizedDescription)")
-            // Set error state so user knows something went wrong
-            authError = "Failed to securely save authentication data. Please try signing in again."
+            
+            // Clean up any partial keychain data to prevent inconsistent state
+            keychainService.clearAllAuthenticationData()
+            
+            // Re-throw the error so the caller can handle authentication state properly
+            throw error
         }
     }
     
@@ -278,14 +282,26 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             print("🔐 Created user: \(displayName) (\(finalEmail.isEmpty ? "no email" : finalEmail))")
             print("🔐 About to save user to Keychain with name: '\(user.displayName)'")
             
-            // Save session and update state
-            saveUserSession(user, userID: userID)
-            currentUser = user
-            isAuthenticated = true
-            authProvider = .apple
-            authError = nil
-            
-            print("🔐 Authentication completed. Current user display name: '\(userDisplayName)'")
+            // Save session and update state - only set authenticated state if keychain save succeeds
+            do {
+                try saveUserSession(user, userID: userID)
+                
+                // Only set authentication state if keychain save was successful
+                currentUser = user
+                isAuthenticated = true
+                authProvider = .apple
+                authError = nil
+                
+                print("🔐 Authentication completed successfully. Current user display name: '\(userDisplayName)'")
+            } catch {
+                // Keychain save failed - revert to unauthenticated state to prevent inconsistency
+                currentUser = nil
+                isAuthenticated = false
+                authProvider = .none
+                authError = "Failed to securely save authentication data. Please try signing in again."
+                
+                print("❌ Authentication failed due to keychain error - user state reverted to unauthenticated")
+            }
         }
     }
     
