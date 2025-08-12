@@ -393,11 +393,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_ENTITLEMENTS[sdk=*]" = Sunshade/Sunshade.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 389Y5DY6GV;
+				DEVELOPMENT_TEAM = "${SUNSHADE_DEVELOPMENT_TEAM}";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Sunshade;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Sunshade needs access to your location to provide accurate UV index and weather information for your area.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Sunshade needs access to your location to provide accurate UV index and weather information for your area.";
@@ -424,11 +426,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_ENTITLEMENTS[sdk=*]" = Sunshade/Sunshade.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 389Y5DY6GV;
+				DEVELOPMENT_TEAM = "${SUNSHADE_DEVELOPMENT_TEAM}";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Sunshade;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Sunshade needs access to your location to provide accurate UV index and weather information for your area.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Sunshade needs access to your location to provide accurate UV index and weather information for your area.";
