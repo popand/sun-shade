@@ -52,6 +52,12 @@ struct MainContentView: View {
                 dashboardViewModel.clearAuthenticatedUser()
             }
         }
+        .onChange(of: authManager.currentUser?.displayName) { displayName in
+            if let displayName = displayName, authManager.isAuthenticated {
+                // Update greeting when user changes their display name
+                dashboardViewModel.updateGreetingForUser(displayName)
+            }
+        }
     }
 }
 
@@ -61,6 +67,8 @@ struct AuthenticatedProfileView: View {
     @State private var showingAccountSettings = false
     @State private var showingPrivacySettings = false
     @State private var showingHelpSupport = false
+    @State private var showingNamePrompt = false
+    @State private var newDisplayName = ""
     
     var body: some View {
         NavigationView {
@@ -114,6 +122,15 @@ struct AuthenticatedProfileView: View {
                 // Account Actions
                 VStack(spacing: 12) {
                     ProfileActionRow(
+                        icon: "pencil",
+                        title: "Edit Display Name",
+                        action: { 
+                            newDisplayName = authManager.userDisplayName
+                            showingNamePrompt = true 
+                        }
+                    )
+                    
+                    ProfileActionRow(
                         icon: "gear",
                         title: "Account Settings",
                         action: { showingAccountSettings = true }
@@ -154,6 +171,30 @@ struct AuthenticatedProfileView: View {
             .background(AppColors.backgroundPrimary)
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
+        }
+        .onAppear {
+            // Check if we need to prompt for name
+            if authManager.shouldPromptForName {
+                showingNamePrompt = true
+                newDisplayName = ""
+            }
+        }
+        .alert("Set Your Name", isPresented: $showingNamePrompt) {
+            TextField("Enter your name", text: $newDisplayName)
+                .textFieldStyle(.roundedBorder)
+            Button("Cancel", role: .cancel) { 
+                newDisplayName = ""
+            }
+            Button("Save") {
+                if !newDisplayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    authManager.updateDisplayName(newDisplayName.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
+                newDisplayName = ""
+            }
+        } message: {
+            Text(authManager.shouldPromptForName ? 
+                "We couldn't get your name from Apple. Please enter how you'd like to be addressed in the app." :
+                "Enter how you'd like to be addressed in the app.")
         }
         .alert("Sign Out", isPresented: $showingSignOutAlert) {
             Button("Cancel", role: .cancel) { }

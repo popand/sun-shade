@@ -14,6 +14,7 @@ class AuthenticationManager: NSObject, ObservableObject {
     @Published var isLoading = false
     @Published var authError: String?
     @Published var authProvider: AuthenticationProvider = .none
+    @Published var shouldPromptForName = false
     
     private let keychainService = KeychainService.shared
     
@@ -138,6 +139,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         do {
             try keychainService.saveAuthenticatedUser(user)
             currentUser = user
+            shouldPromptForName = false // Clear the prompt flag
             print("✅ Updated display name to: \(newName)")
         } catch {
             print("❌ Failed to update display name: \(error.localizedDescription)")
@@ -159,10 +161,19 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             let lastName = appleIDCredential.fullName?.familyName ?? ""
             let email = appleIDCredential.email ?? ""
             
+            print("🔍 Apple Sign-In Debug Info:")
+            print("   User ID: \(userID)")
+            print("   First Name: '\(firstName)' (isEmpty: \(firstName.isEmpty))")
+            print("   Last Name: '\(lastName)' (isEmpty: \(lastName.isEmpty))")
+            print("   Email: '\(email)' (isEmpty: \(email.isEmpty))")
+            
             // Try to load existing user data for this user ID
             var existingUser: AuthenticatedUser?
             do {
                 existingUser = try keychainService.loadAuthenticatedUser()
+                if let existingUser = existingUser {
+                    print("   Found existing user: '\(existingUser.displayName)' (\(existingUser.email))")
+                }
             } catch {
                 print("ℹ️ No existing user data found: \(error.localizedDescription)")
             }
@@ -170,22 +181,30 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             // Create display name with improved fallback logic
             var displayName = ""
             
+            print("🔍 Display Name Resolution:")
             // First priority: Use new name information from Apple (first-time sign in)
             if !firstName.isEmpty && !lastName.isEmpty {
                 displayName = "\(firstName) \(lastName)"
+                print("   ✅ Using full name from Apple: '\(displayName)'")
             } else if !firstName.isEmpty {
                 displayName = firstName
+                print("   ✅ Using first name from Apple: '\(displayName)'")
             } else if !lastName.isEmpty {
                 displayName = lastName
+                print("   ✅ Using last name from Apple: '\(displayName)'")
             } else if !email.isEmpty {
                 displayName = email.components(separatedBy: "@").first ?? "User"
+                print("   ✅ Using email username: '\(displayName)'")
             } else if let existingUser = existingUser, !existingUser.displayName.isEmpty && existingUser.displayName != "Apple User" {
                 // Second priority: Use previously stored display name if available
                 displayName = existingUser.displayName
-                print("ℹ️ Using stored display name: \(displayName)")
+                print("   ✅ Using stored display name: '\(displayName)'")
             } else {
                 // Last resort: Generic fallback
                 displayName = "Apple User"
+                print("   ⚠️ Falling back to: '\(displayName)' - will prompt user to set name")
+                // Set flag to prompt user for their preferred name
+                shouldPromptForName = true
             }
             
             // Use existing email if new one is not provided (Apple privacy feature)
