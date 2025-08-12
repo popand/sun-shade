@@ -123,6 +123,27 @@ class AuthenticationManager: NSObject, ObservableObject {
         }
         return "U"
     }
+    
+    // Allow user to update their display name
+    func updateDisplayName(_ newName: String) {
+        guard var user = currentUser else { return }
+        
+        user = AuthenticatedUser(
+            id: user.id,
+            displayName: newName,
+            email: user.email,
+            provider: user.provider
+        )
+        
+        do {
+            try keychainService.saveAuthenticatedUser(user)
+            currentUser = user
+            print("✅ Updated display name to: \(newName)")
+        } catch {
+            print("❌ Failed to update display name: \(error.localizedDescription)")
+            authError = "Failed to update display name. Please try again."
+        }
+    }
 }
 
 // MARK: - ASAuthorizationControllerDelegate
@@ -133,13 +154,23 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
             let userID = appleIDCredential.user
             
-            // Get user information
+            // Get user information from Apple
             let firstName = appleIDCredential.fullName?.givenName ?? ""
             let lastName = appleIDCredential.fullName?.familyName ?? ""
             let email = appleIDCredential.email ?? ""
             
-            // Create display name
+            // Try to load existing user data for this user ID
+            var existingUser: AuthenticatedUser?
+            do {
+                existingUser = try keychainService.loadAuthenticatedUser()
+            } catch {
+                print("ℹ️ No existing user data found: \(error.localizedDescription)")
+            }
+            
+            // Create display name with improved fallback logic
             var displayName = ""
+            
+            // First priority: Use new name information from Apple (first-time sign in)
             if !firstName.isEmpty && !lastName.isEmpty {
                 displayName = "\(firstName) \(lastName)"
             } else if !firstName.isEmpty {
@@ -148,17 +179,27 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
                 displayName = lastName
             } else if !email.isEmpty {
                 displayName = email.components(separatedBy: "@").first ?? "User"
+            } else if let existingUser = existingUser, !existingUser.displayName.isEmpty && existingUser.displayName != "Apple User" {
+                // Second priority: Use previously stored display name if available
+                displayName = existingUser.displayName
+                print("ℹ️ Using stored display name: \(displayName)")
             } else {
+                // Last resort: Generic fallback
                 displayName = "Apple User"
             }
+            
+            // Use existing email if new one is not provided (Apple privacy feature)
+            let finalEmail = !email.isEmpty ? email : (existingUser?.email ?? "")
             
             // Create authenticated user
             let user = AuthenticatedUser(
                 id: userID,
                 displayName: displayName,
-                email: email,
+                email: finalEmail,
                 provider: .apple
             )
+            
+            print("🔐 Created user: \(displayName) (\(finalEmail.isEmpty ? "no email" : finalEmail))")
             
             // Save session and update state
             saveUserSession(user, userID: userID)
