@@ -37,11 +37,19 @@ struct MainContentView: View {
         }
         .onAppear {
             authManager.checkAuthenticationStatus()
+            
+            // Initialize greeting with authenticated user if already signed in
+            if authManager.isAuthenticated {
+                dashboardViewModel.updateGreetingForUser(authManager.userDisplayName)
+            }
         }
         .onChange(of: authManager.isAuthenticated) { isAuthenticated in
             if isAuthenticated {
                 // Update greeting when user becomes authenticated
                 dashboardViewModel.updateGreetingForUser(authManager.userDisplayName)
+            } else {
+                // Clear authenticated user data when user signs out
+                dashboardViewModel.clearAuthenticatedUser()
             }
         }
     }

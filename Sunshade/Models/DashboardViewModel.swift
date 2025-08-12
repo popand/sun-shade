@@ -23,6 +23,9 @@ class DashboardViewModel: ObservableObject {
     private let exposureLogManager = ExposureLogManager.shared
     private var cancellables = Set<AnyCancellable>()
     
+    // Store reference to authenticated user for personalized greetings
+    private var authenticatedUserName: String?
+    
     // Cached weekly session data to prevent O(n) filtering on every access
     private var cachedWeeklyData: (startOfWeek: Date, sessions: [ExposureSession], cacheDate: Date)?
     
@@ -215,11 +218,21 @@ class DashboardViewModel: ObservableObject {
     }
     
     private func updateGreeting() {
-        greeting = TimeUtils.getPersonalizedGreeting(name: userProfile.name)
+        // Use authenticated user name if available, otherwise fall back to userProfile
+        let displayName = authenticatedUserName ?? userProfile.name
+        greeting = TimeUtils.getPersonalizedGreeting(name: displayName)
     }
     
     func updateGreetingForUser(_ userName: String) {
+        // Store the authenticated user's name for future greeting updates
+        authenticatedUserName = userName
         greeting = TimeUtils.getPersonalizedGreeting(name: userName)
+    }
+    
+    func clearAuthenticatedUser() {
+        // Clear authenticated user data when user signs out
+        authenticatedUserName = nil
+        updateGreeting() // This will fall back to userProfile.name
     }
     
     private func fetchWeatherData(for location: CLLocation) async {
