@@ -1,5 +1,99 @@
 import SwiftUI
 
+struct NameInputView: View {
+    @Binding var displayName: String
+    let isPromptedBySystem: Bool
+    let onSave: (String) -> Void
+    let onCancel: () -> Void
+    
+    @State private var localName = ""
+    @FocusState private var isTextFieldFocused: Bool
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 24) {
+                // Header
+                VStack(spacing: 16) {
+                    Image(systemName: "person.circle.fill")
+                        .font(.system(size: 50))
+                        .foregroundColor(AppColors.primary)
+                    
+                    VStack(spacing: 8) {
+                        Text("Set Your Name")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Text(isPromptedBySystem ? 
+                             "We couldn't get your name from Apple. Please enter how you'd like to be addressed in the app." :
+                             "Enter how you'd like to be addressed in the app.")
+                            .font(.body)
+                            .foregroundColor(AppColors.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .padding(.top, 20)
+                
+                // Text Input
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Display Name")
+                        .font(.headline)
+                        .foregroundColor(AppColors.textPrimary)
+                    
+                    TextField("Enter your name", text: $localName)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($isTextFieldFocused)
+                        .submitLabel(.done)
+                        .onSubmit {
+                            saveIfValid()
+                        }
+                }
+                
+                Spacer()
+                
+                // Action buttons
+                VStack(spacing: 12) {
+                    Button(action: saveIfValid) {
+                        Text("Save")
+                            .font(.body)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(
+                                localName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 
+                                Color.gray : AppColors.primary
+                            )
+                            .cornerRadius(12)
+                    }
+                    .disabled(localName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    
+                    Button(action: onCancel) {
+                        Text("Cancel")
+                            .font(.body)
+                            .foregroundColor(AppColors.textSecondary)
+                    }
+                }
+                .padding(.bottom, 20)
+            }
+            .padding()
+            .navigationTitle("")
+            .navigationBarHidden(true)
+        }
+        .onAppear {
+            localName = displayName
+            isTextFieldFocused = true
+        }
+    }
+    
+    private func saveIfValid() {
+        let trimmedName = localName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedName.isEmpty {
+            onSave(trimmedName)
+        }
+    }
+}
+
 struct MainContentView: View {
     @StateObject private var authManager = AuthenticationManager()
     @StateObject private var dashboardViewModel = DashboardViewModel()
@@ -179,22 +273,19 @@ struct AuthenticatedProfileView: View {
                 newDisplayName = ""
             }
         }
-        .alert("Set Your Name", isPresented: $showingNamePrompt) {
-            TextField("Enter your name", text: $newDisplayName)
-                .textFieldStyle(.roundedBorder)
-            Button("Cancel", role: .cancel) { 
-                newDisplayName = ""
-            }
-            Button("Save") {
-                if !newDisplayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    authManager.updateDisplayName(newDisplayName.trimmingCharacters(in: .whitespacesAndNewlines))
+        .sheet(isPresented: $showingNamePrompt) {
+            NameInputView(
+                displayName: $newDisplayName,
+                isPromptedBySystem: authManager.shouldPromptForName,
+                onSave: { name in
+                    authManager.updateDisplayName(name)
+                    showingNamePrompt = false
+                },
+                onCancel: {
+                    newDisplayName = ""
+                    showingNamePrompt = false
                 }
-                newDisplayName = ""
-            }
-        } message: {
-            Text(authManager.shouldPromptForName ? 
-                "We couldn't get your name from Apple. Please enter how you'd like to be addressed in the app." :
-                "Enter how you'd like to be addressed in the app.")
+            )
         }
         .alert("Sign Out", isPresented: $showingSignOutAlert) {
             Button("Cancel", role: .cancel) { }
