@@ -57,14 +57,6 @@ struct AuthenticationView: View {
                         .cornerRadius(25)
                     }
                     .padding(.horizontal, 30)
-                    
-                    // Continue without signing in
-                    Button("Continue without signing in") {
-                        // Skip authentication for now - can be implemented later
-                    }
-                    .font(.subheadline)
-                    .foregroundColor(AppColors.textSecondary)
-                    .padding(.top, 10)
                 }
                 
                 Spacer()
