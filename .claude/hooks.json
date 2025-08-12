@@ -1,0 +1,23 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v swiftformat >/dev/null 2>&1 && find . -name '*.swift' -print -quit | grep -q .; then swiftformat . --config .swiftformat; echo \"✓ Code formatted with SwiftFormat\"; fi"
+          },
+          {
+            "type": "command",
+            "command": "if command -v swiftlint >/dev/null 2>&1 && find . -name '*.swift' -print -quit | grep -q . && [ -f .swiftlint.yml ]; then swiftlint --fix --format --config .swiftlint.yml; echo \"✓ SwiftLint fixes applied and linting completed\"; else echo \"⚠ SwiftLint, Swift files, or .swiftlint.yml not found\"; fi"
+          },
+          {
+            "type": "command",
+            "command": "if [ -f 'Package.swift' ]; then echo \"📦 Building Swift Package...\"; swift build || echo \"❌ Swift build failed\"; elif find . -name '*.xcodeproj' -o -name '*.xcworkspace' | head -1 | grep -q .; then echo \"🔨 Xcode project detected - build manually with appropriate scheme\"; else echo \"⚠ No Swift Package or Xcode project found\"; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
