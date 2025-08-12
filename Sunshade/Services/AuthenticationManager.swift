@@ -255,7 +255,11 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
                 // Last resort: Generic fallback
                 displayName = "Apple User"
                 print("   ⚠️ Falling back to: '\(displayName)' - will prompt user to set name")
-                print("   🔍 This suggests Apple didn't provide name data despite showing it in the UI")
+                print("   🔍 Apple Sign-In Privacy Behavior:")
+                print("      - This is normal for development builds or repeat sign-ins")
+                print("      - Apple only provides name/email on first authorization per privacy policy")
+                print("      - Production apps typically receive more complete data")
+                print("      - User will be prompted to enter their preferred name")
                 // Set flag to prompt user for their preferred name
                 shouldPromptForName = true
             }
