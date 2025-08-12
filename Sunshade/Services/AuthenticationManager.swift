@@ -1,6 +1,7 @@
 import Foundation
 import AuthenticationServices
 import SwiftUI
+import Contacts
 
 enum AuthenticationProvider {
     case apple
@@ -158,16 +159,38 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             let userID = appleIDCredential.user
             
             // Get user information from Apple
-            let firstName = appleIDCredential.fullName?.givenName ?? ""
-            let lastName = appleIDCredential.fullName?.familyName ?? ""
+            let fullNameComponents = appleIDCredential.fullName
+            let firstName = fullNameComponents?.givenName ?? ""
+            let lastName = fullNameComponents?.familyName ?? ""
             let email = appleIDCredential.email ?? ""
             
             print("🔍 Apple Sign-In Debug Info:")
             print("   User ID: \(userID)")
-            print("   FullName Object: \(String(describing: appleIDCredential.fullName))")
-            print("   First Name: '\(firstName)' (isEmpty: \(firstName.isEmpty))")
-            print("   Last Name: '\(lastName)' (isEmpty: \(lastName.isEmpty))")
-            print("   Email: '\(email)' (isEmpty: \(email.isEmpty))")
+            print("   FullName Object: \(String(describing: fullNameComponents))")
+            
+            // Additional debugging for name components
+            if let nameComponents = fullNameComponents {
+                print("   Name Components Details:")
+                print("     - givenName: '\(nameComponents.givenName ?? "nil")'")
+                print("     - familyName: '\(nameComponents.familyName ?? "nil")'")
+                print("     - middleName: '\(nameComponents.middleName ?? "nil")'")
+                print("     - namePrefix: '\(nameComponents.namePrefix ?? "nil")'")
+                print("     - nameSuffix: '\(nameComponents.nameSuffix ?? "nil")'")
+                print("     - nickname: '\(nameComponents.nickname ?? "nil")'")
+                
+                // Try to get formatted name
+                let formatter = PersonNameComponentsFormatter()
+                formatter.style = .default
+                let formattedName = formatter.string(from: nameComponents)
+                print("     - Formatted Name: '\(formattedName)'")
+            } else {
+                print("   ⚠️ FullName is nil - Apple didn't provide name components")
+            }
+            
+            print("   Extracted Values:")
+            print("     - First Name: '\(firstName)' (isEmpty: \(firstName.isEmpty))")
+            print("     - Last Name: '\(lastName)' (isEmpty: \(lastName.isEmpty))")
+            print("     - Email: '\(email)' (isEmpty: \(email.isEmpty))")
             print("   State: \(appleIDCredential.state ?? "nil")")
             print("   AuthorizationCode: \(appleIDCredential.authorizationCode != nil ? "present" : "nil")")
             
@@ -208,6 +231,19 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             } else if !lastName.isEmpty {
                 displayName = lastName
                 print("   ✅ Using last name from Apple: '\(displayName)'")
+            } else if let nameComponents = fullNameComponents {
+                // Try using PersonNameComponentsFormatter as fallback
+                let formatter = PersonNameComponentsFormatter()
+                formatter.style = .default
+                let formattedName = formatter.string(from: nameComponents)
+                if !formattedName.isEmpty {
+                    displayName = formattedName
+                    print("   ✅ Using formatted name from PersonNameComponentsFormatter: '\(displayName)'")
+                } else {
+                    displayName = "Apple User"
+                    print("   ⚠️ PersonNameComponentsFormatter returned empty string")
+                    shouldPromptForName = true
+                }
             } else if !email.isEmpty {
                 displayName = email.components(separatedBy: "@").first ?? "User"
                 print("   ✅ Using email username: '\(displayName)'")
@@ -236,6 +272,7 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             )
             
             print("🔐 Created user: \(displayName) (\(finalEmail.isEmpty ? "no email" : finalEmail))")
+            print("🔐 About to save user to Keychain with name: '\(user.displayName)'")
             
             // Save session and update state
             saveUserSession(user, userID: userID)
@@ -243,6 +280,8 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             isAuthenticated = true
             authProvider = .apple
             authError = nil
+            
+            print("🔐 Authentication completed. Current user display name: '\(userDisplayName)'")
         }
     }
     
