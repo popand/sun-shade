@@ -157,16 +157,18 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
         isLoading = false
         
         print("🔴 Apple Sign-In Error: \(error)")
+        print("🔍 Error Domain: \((error as NSError).domain)")
+        print("🔍 Error Code: \((error as NSError).code)")
         
         // Handle the error
         if let authError = error as? ASAuthorizationError {
             switch authError.code {
             case .canceled:
-                self.authError = "Sign in was canceled by user"
+                self.authError = nil // Don't show error for user cancellation
                 print("ℹ️ User canceled Apple Sign-In")
             case .failed:
-                self.authError = "Sign in failed - check Apple Sign-In capability"
-                print("❌ Apple Sign-In failed - capability may not be enabled")
+                self.authError = "Sign in failed. Please try again."
+                print("❌ Apple Sign-In failed")
             case .invalidResponse:
                 self.authError = "Invalid response from Apple"
                 print("❌ Invalid response from Apple servers")
@@ -174,36 +176,44 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
                 self.authError = "Sign in not handled - configuration issue"
                 print("❌ Sign-In not handled - check app configuration")
             case .unknown:
-                self.authError = "Unknown error - check device settings"
-                print("❌ Unknown Apple Sign-In error")
+                // Error 1000 falls here - capability not configured
+                if (error as NSError).code == 1000 {
+                    print("⚠️ Error 1000: Sign in with Apple capability not properly configured")
+                    self.authError = "Sign in with Apple is not properly configured. Please contact support."
+                    print("📱 Instructions for fixing:")
+                    print("   1. Open project in Xcode")
+                    print("   2. Select Sunshade target → Signing & Capabilities")
+                    print("   3. Click '+' and add 'Sign In with Apple' capability")
+                    print("   4. Ensure entitlements file is linked: CODE_SIGN_ENTITLEMENTS = Sunshade/Sunshade.entitlements")
+                } else {
+                    self.authError = "Unknown error - check device settings"
+                    print("❌ Unknown Apple Sign-In error")
+                }
             @unknown default:
                 self.authError = "Unexpected error occurred"
                 print("❌ Unexpected Apple Sign-In error")
             }
         } else {
-            self.authError = "Authentication error: \(error.localizedDescription)"
-            print("❌ General authentication error: \(error)")
-        }
-        
-        // Additional debugging for common issues
-        if error.localizedDescription.contains("1000") {
-            print("💡 Error 1000 usually means Apple Sign-In capability is not enabled")
-            self.authError = "Apple Sign-In not configured. Enable 'Sign In with Apple' capability in Xcode."
-        }
-        
-        if error.localizedDescription.contains("-7026") {
-            print("💡 Error -7026 usually means Apple ID authentication issue")
-            self.authError = "Apple ID authentication failed. Check device Apple ID settings."
-        }
-        
-        if error.localizedDescription.contains("-7003") {
-            print("💡 Error -7003 means Apple ID is not signed in or not verified")
-            self.authError = "Apple ID not signed in. Please sign in to Apple ID in Settings."
-        }
-        
-        if error.localizedDescription.contains("1001") {
-            print("💡 Error 1001 means user canceled or Apple ID authentication failed")
-            self.authError = "Authentication failed. Ensure you're signed in to Apple ID and try again."
+            // Handle specific error codes
+            let nsError = error as NSError
+            
+            switch nsError.code {
+            case 1000:
+                print("⚠️ Error 1000: Sign in with Apple capability not enabled in Xcode")
+                self.authError = "Sign in with Apple is not configured. Please enable the capability in Xcode."
+            case -7026:
+                print("⚠️ Error -7026: Apple ID authentication issue")
+                self.authError = "Unable to verify Apple ID. Please check your device settings."
+            case -7003:
+                print("⚠️ Error -7003: Apple ID not signed in")
+                self.authError = "Please sign in to your Apple ID in Settings and try again."
+            case 1001:
+                print("⚠️ Error 1001: Authentication failed or canceled")
+                self.authError = nil // User likely canceled
+            default:
+                self.authError = "Authentication failed. Please try again."
+                print("❌ General authentication error: \(error)")
+            }
         }
     }
 }
