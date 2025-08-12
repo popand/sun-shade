@@ -15,6 +15,8 @@ class AuthenticationManager: NSObject, ObservableObject {
     @Published var authError: String?
     @Published var authProvider: AuthenticationProvider = .none
     
+    private let keychainService = KeychainService.shared
+    
     override init() {
         super.init()
         checkAuthenticationStatus()
@@ -22,7 +24,8 @@ class AuthenticationManager: NSObject, ObservableObject {
     
     func checkAuthenticationStatus() {
         // Check if user has existing Apple Sign-In credentials
-        if let userID = UserDefaults.standard.string(forKey: "appleUserID") {
+        do {
+            let userID = try keychainService.loadAppleUserID()
             let appleIDProvider = ASAuthorizationAppleIDProvider()
             appleIDProvider.getCredentialState(forUserID: userID) { [weak self] (credentialState, error) in
                 DispatchQueue.main.async {
@@ -38,18 +41,24 @@ class AuthenticationManager: NSObject, ObservableObject {
                     }
                 }
             }
+        } catch {
+            // No stored credentials or keychain error
+            print("ℹ️ No stored Apple Sign-In credentials: \(error.localizedDescription)")
         }
     }
     
     private func restoreUserSession() {
-        guard let userData = UserDefaults.standard.data(forKey: "authenticatedUser"),
-              let user = try? JSONDecoder().decode(AuthenticatedUser.self, from: userData) else {
-            return
+        do {
+            let user = try keychainService.loadAuthenticatedUser()
+            currentUser = user
+            isAuthenticated = true
+            authProvider = .apple
+            print("✅ Restored user session from Keychain: \(user.displayName)")
+        } catch {
+            print("⚠️ Failed to restore user session from Keychain: \(error.localizedDescription)")
+            // Clear any partial/corrupted data
+            keychainService.clearAllAuthenticationData()
         }
-        
-        currentUser = user
-        isAuthenticated = true
-        authProvider = .apple
     }
     
     func signInWithApple() {
@@ -66,24 +75,31 @@ class AuthenticationManager: NSObject, ObservableObject {
     }
     
     func signOut() {
-        // Clear stored user data
-        UserDefaults.standard.removeObject(forKey: "appleUserID")
-        UserDefaults.standard.removeObject(forKey: "authenticatedUser")
+        // Clear stored user data from Keychain
+        keychainService.clearAllAuthenticationData()
         
         // Reset state
         isAuthenticated = false
         currentUser = nil
         authProvider = .none
         authError = nil
+        
+        print("🔐 User signed out - cleared all authentication data from Keychain")
     }
     
     private func saveUserSession(_ user: AuthenticatedUser, userID: String) {
-        // Save user ID for credential state checking
-        UserDefaults.standard.set(userID, forKey: "appleUserID")
-        
-        // Save user data
-        if let userData = try? JSONEncoder().encode(user) {
-            UserDefaults.standard.set(userData, forKey: "authenticatedUser")
+        do {
+            // Save user ID for credential state checking
+            try keychainService.saveAppleUserID(userID)
+            
+            // Save user data
+            try keychainService.saveAuthenticatedUser(user)
+            
+            print("🔐 Saved user session to Keychain: \(user.displayName)")
+        } catch {
+            print("❌ Failed to save user session to Keychain: \(error.localizedDescription)")
+            // Set error state so user knows something went wrong
+            authError = "Failed to securely save authentication data. Please try signing in again."
         }
     }
     
