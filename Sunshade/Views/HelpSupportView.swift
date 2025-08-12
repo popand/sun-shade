@@ -132,14 +132,12 @@ struct HelpSupportView: View {
             .background(AppColors.backgroundPrimary)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                    .foregroundColor(AppColors.primary)
+            .navigationBarItems(
+                leading: Button("Done") {
+                    presentationMode.wrappedValue.dismiss()
                 }
-            }
+                .foregroundColor(AppColors.primary)
+            )
         }
         .sheet(isPresented: $showingMailComposer) {
             MailComposeView(

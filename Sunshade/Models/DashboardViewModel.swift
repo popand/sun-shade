@@ -23,6 +23,17 @@ class DashboardViewModel: ObservableObject {
     private let exposureLogManager = ExposureLogManager.shared
     private var cancellables = Set<AnyCancellable>()
     
+    // MARK: - User Name State Management
+    
+    /// Stores the authenticated user's display name from Apple Sign-In or similar auth providers.
+    /// This takes precedence over userProfile.name when available.
+    /// 
+    /// Priority order for display names:
+    /// 1. authenticatedUserName (from sign-in providers like Apple)
+    /// 2. userProfile.name (user's manually set profile name)
+    /// 3. Default greeting without name
+    private var authenticatedUserName: String?
+    
     // Cached weekly session data to prevent O(n) filtering on every access
     private var cachedWeeklyData: (startOfWeek: Date, sessions: [ExposureSession], cacheDate: Date)?
     
@@ -214,12 +225,35 @@ class DashboardViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    private func updateGreeting() {
-        greeting = TimeUtils.getPersonalizedGreeting(name: userProfile.name)
+    // MARK: - User Name & Greeting Management
+    
+    /// Returns the current display name following the established priority order.
+    /// This provides a single source of truth for which name to display.
+    private var currentDisplayName: String {
+        return authenticatedUserName ?? userProfile.name
     }
     
+    /// Updates the greeting using the current display name.
+    /// This method should be called whenever the time changes or user name state changes.
+    private func updateGreeting() {
+        greeting = TimeUtils.getPersonalizedGreeting(name: currentDisplayName)
+    }
+    
+    /// Sets the authenticated user's name and immediately updates the greeting.
+    /// This is called when a user successfully authenticates via Apple Sign-In or similar providers.
+    /// The authenticated name takes precedence over the profile name.
+    ///
+    /// - Parameter userName: The display name from the authentication provider
     func updateGreetingForUser(_ userName: String) {
-        greeting = TimeUtils.getPersonalizedGreeting(name: userName)
+        authenticatedUserName = userName
+        updateGreeting()
+    }
+    
+    /// Clears the authenticated user state and reverts to using the profile name.
+    /// This is called when the user signs out of their authenticated session.
+    func clearAuthenticatedUser() {
+        authenticatedUserName = nil
+        updateGreeting()
     }
     
     private func fetchWeatherData(for location: CLLocation) async {

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct PrivacyNoticeView: View {
+    @Environment(\.presentationMode) var presentationMode
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -62,6 +64,12 @@ struct PrivacyNoticeView: View {
             }
             .background(AppColors.backgroundPrimary)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarItems(
+                leading: Button("Done") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .foregroundColor(AppColors.primary)
+            )
         }
     }
     

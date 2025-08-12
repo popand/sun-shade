@@ -1,6 +1,7 @@
 import Foundation
 import AuthenticationServices
 import SwiftUI
+import Contacts
 
 enum AuthenticationProvider {
     case apple
@@ -14,6 +15,7 @@ class AuthenticationManager: NSObject, ObservableObject {
     @Published var isLoading = false
     @Published var authError: String?
     @Published var authProvider: AuthenticationProvider = .none
+    @Published var shouldPromptForName = false
     
     private let keychainService = KeychainService.shared
     
@@ -87,7 +89,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         print("🔐 User signed out - cleared all authentication data from Keychain")
     }
     
-    private func saveUserSession(_ user: AuthenticatedUser, userID: String) {
+    private func saveUserSession(_ user: AuthenticatedUser, userID: String) throws {
         do {
             // Save user ID for credential state checking
             try keychainService.saveAppleUserID(userID)
@@ -98,8 +100,12 @@ class AuthenticationManager: NSObject, ObservableObject {
             print("🔐 Saved user session to Keychain: \(user.displayName)")
         } catch {
             print("❌ Failed to save user session to Keychain: \(error.localizedDescription)")
-            // Set error state so user knows something went wrong
-            authError = "Failed to securely save authentication data. Please try signing in again."
+            
+            // Clean up any partial keychain data to prevent inconsistent state
+            keychainService.clearAllAuthenticationData()
+            
+            // Re-throw the error so the caller can handle authentication state properly
+            throw error
         }
     }
     
@@ -123,49 +129,179 @@ class AuthenticationManager: NSObject, ObservableObject {
         }
         return "U"
     }
+    
+    // Allow user to update their display name
+    func updateDisplayName(_ newName: String) {
+        guard var user = currentUser else { return }
+        
+        user = AuthenticatedUser(
+            id: user.id,
+            displayName: newName,
+            email: user.email,
+            provider: user.provider
+        )
+        
+        do {
+            try keychainService.saveAuthenticatedUser(user)
+            currentUser = user
+            shouldPromptForName = false // Clear the prompt flag
+            print("✅ Updated display name to: \(newName)")
+        } catch {
+            print("❌ Failed to update display name: \(error.localizedDescription)")
+            authError = "Failed to update display name. Please try again."
+        }
+    }
 }
 
 // MARK: - ASAuthorizationControllerDelegate
 extension AuthenticationManager: ASAuthorizationControllerDelegate {
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
         isLoading = false
+        shouldPromptForName = false // Reset prompt flag at start of authentication
         
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
             let userID = appleIDCredential.user
             
-            // Get user information
-            let firstName = appleIDCredential.fullName?.givenName ?? ""
-            let lastName = appleIDCredential.fullName?.familyName ?? ""
+            // Get user information from Apple
+            let fullNameComponents = appleIDCredential.fullName
+            let firstName = fullNameComponents?.givenName ?? ""
+            let lastName = fullNameComponents?.familyName ?? ""
             let email = appleIDCredential.email ?? ""
             
-            // Create display name
+            print("🔍 Apple Sign-In Debug Info:")
+            print("   User ID: \(userID)")
+            print("   FullName Object: \(String(describing: fullNameComponents))")
+            
+            // Additional debugging for name components
+            if let nameComponents = fullNameComponents {
+                print("   Name Components Details:")
+                print("     - givenName: '\(nameComponents.givenName ?? "nil")'")
+                print("     - familyName: '\(nameComponents.familyName ?? "nil")'")
+                print("     - middleName: '\(nameComponents.middleName ?? "nil")'")
+                print("     - namePrefix: '\(nameComponents.namePrefix ?? "nil")'")
+                print("     - nameSuffix: '\(nameComponents.nameSuffix ?? "nil")'")
+                print("     - nickname: '\(nameComponents.nickname ?? "nil")'")
+                
+                // Try to get formatted name
+                let formatter = PersonNameComponentsFormatter()
+                formatter.style = .default
+                let formattedName = formatter.string(from: nameComponents)
+                print("     - Formatted Name: '\(formattedName)'")
+            } else {
+                print("   ⚠️ FullName is nil - Apple didn't provide name components")
+            }
+            
+            print("   Extracted Values:")
+            print("     - First Name: '\(firstName)' (isEmpty: \(firstName.isEmpty))")
+            print("     - Last Name: '\(lastName)' (isEmpty: \(lastName.isEmpty))")
+            print("     - Email: '\(email)' (isEmpty: \(email.isEmpty))")
+            print("   State: \(appleIDCredential.state ?? "nil")")
+            print("   AuthorizationCode: \(appleIDCredential.authorizationCode != nil ? "present" : "nil")")
+            
+            // Try to load existing user data for this user ID (only for email fallback, not for name)
+            var existingUser: AuthenticatedUser?
+            do {
+                let loadedUser = try keychainService.loadAuthenticatedUser()
+                print("   Found existing user: '\(loadedUser.displayName)' (\(loadedUser.email))")
+                // Important: Only use existing data for email, always prefer fresh name from Apple
+                if loadedUser.id == userID {
+                    print("   ✅ Same user re-authenticating")
+                    existingUser = loadedUser
+                } else {
+                    print("   ⚠️ Different user - not using existing data")
+                    existingUser = nil // Don't use data from different user
+                }
+            } catch {
+                print("ℹ️ No existing user data found: \(error.localizedDescription)")
+            }
+            
+            // Create display name with improved fallback logic
             var displayName = ""
+            
+            print("🔍 Display Name Resolution:")
+            print("   Available data check:")
+            print("     - firstName.isEmpty: \(firstName.isEmpty)")
+            print("     - lastName.isEmpty: \(lastName.isEmpty)")
+            print("     - email.isEmpty: \(email.isEmpty)")
+            print("     - existingUser: \(existingUser != nil ? "exists" : "nil")")
+            
+            // First priority: Use new name information from Apple (first-time sign in)
             if !firstName.isEmpty && !lastName.isEmpty {
                 displayName = "\(firstName) \(lastName)"
+                print("   ✅ Using full name from Apple: '\(displayName)'")
             } else if !firstName.isEmpty {
                 displayName = firstName
+                print("   ✅ Using first name from Apple: '\(displayName)'")
             } else if !lastName.isEmpty {
                 displayName = lastName
+                print("   ✅ Using last name from Apple: '\(displayName)'")
+            } else if let nameComponents = fullNameComponents {
+                // Try using PersonNameComponentsFormatter as fallback
+                let formatter = PersonNameComponentsFormatter()
+                formatter.style = .default
+                let formattedName = formatter.string(from: nameComponents)
+                if !formattedName.isEmpty {
+                    displayName = formattedName
+                    print("   ✅ Using formatted name from PersonNameComponentsFormatter: '\(displayName)'")
+                } else {
+                    displayName = "Apple User"
+                    print("   ⚠️ PersonNameComponentsFormatter returned empty string")
+                    shouldPromptForName = true
+                }
             } else if !email.isEmpty {
                 displayName = email.components(separatedBy: "@").first ?? "User"
+                print("   ✅ Using email username: '\(displayName)'")
+            } else if let existingUser = existingUser, !existingUser.displayName.isEmpty && existingUser.displayName != "Apple User" {
+                // Second priority: Use previously stored display name if available
+                displayName = existingUser.displayName
+                print("   ✅ Using stored display name: '\(displayName)'")
             } else {
+                // Last resort: Generic fallback
                 displayName = "Apple User"
+                print("   ⚠️ Falling back to: '\(displayName)' - will prompt user to set name")
+                print("   🔍 Apple Sign-In Privacy Behavior:")
+                print("      - This is normal for development builds or repeat sign-ins")
+                print("      - Apple only provides name/email on first authorization per privacy policy")
+                print("      - Production apps typically receive more complete data")
+                print("      - User will be prompted to enter their preferred name")
+                // Set flag to prompt user for their preferred name
+                shouldPromptForName = true
             }
+            
+            // Use existing email if new one is not provided (Apple privacy feature)
+            let finalEmail = !email.isEmpty ? email : (existingUser?.email ?? "")
             
             // Create authenticated user
             let user = AuthenticatedUser(
                 id: userID,
                 displayName: displayName,
-                email: email,
+                email: finalEmail,
                 provider: .apple
             )
             
-            // Save session and update state
-            saveUserSession(user, userID: userID)
-            currentUser = user
-            isAuthenticated = true
-            authProvider = .apple
-            authError = nil
+            print("🔐 Created user: \(displayName) (\(finalEmail.isEmpty ? "no email" : finalEmail))")
+            print("🔐 About to save user to Keychain with name: '\(user.displayName)'")
+            
+            // Save session and update state - only set authenticated state if keychain save succeeds
+            do {
+                try saveUserSession(user, userID: userID)
+                
+                // Only set authentication state if keychain save was successful
+                currentUser = user
+                isAuthenticated = true
+                authProvider = .apple
+                authError = nil
+                
+                print("🔐 Authentication completed successfully. Current user display name: '\(userDisplayName)'")
+            } catch {
+                // Keychain save failed - revert to unauthenticated state to prevent inconsistency
+                currentUser = nil
+                isAuthenticated = false
+                authProvider = .none
+                authError = "Failed to securely save authentication data. Please try signing in again."
+                
+                print("❌ Authentication failed due to keychain error - user state reverted to unauthenticated")
+            }
         }
     }
     

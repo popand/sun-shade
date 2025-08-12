@@ -1,5 +1,99 @@
 import SwiftUI
 
+struct NameInputView: View {
+    @Binding var displayName: String
+    let isPromptedBySystem: Bool
+    let onSave: (String) -> Void
+    let onCancel: () -> Void
+    
+    @State private var localName = ""
+    @FocusState private var isTextFieldFocused: Bool
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 24) {
+                // Header
+                VStack(spacing: 16) {
+                    Image(systemName: "person.circle.fill")
+                        .font(.system(size: 50))
+                        .foregroundColor(AppColors.primary)
+                    
+                    VStack(spacing: 8) {
+                        Text("Set Your Name")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Text(isPromptedBySystem ? 
+                             "We couldn't get your name from Apple. Please enter how you'd like to be addressed in the app." :
+                             "Enter how you'd like to be addressed in the app.")
+                            .font(.body)
+                            .foregroundColor(AppColors.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .padding(.top, 20)
+                
+                // Text Input
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Display Name")
+                        .font(.headline)
+                        .foregroundColor(AppColors.textPrimary)
+                    
+                    TextField("Enter your name", text: $localName)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($isTextFieldFocused)
+                        .submitLabel(.done)
+                        .onSubmit {
+                            saveIfValid()
+                        }
+                }
+                
+                Spacer()
+                
+                // Action buttons
+                VStack(spacing: 12) {
+                    Button(action: saveIfValid) {
+                        Text("Save")
+                            .font(.body)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(
+                                localName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 
+                                Color.gray : AppColors.primary
+                            )
+                            .cornerRadius(12)
+                    }
+                    .disabled(localName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    
+                    Button(action: onCancel) {
+                        Text("Cancel")
+                            .font(.body)
+                            .foregroundColor(AppColors.textSecondary)
+                    }
+                }
+                .padding(.bottom, 20)
+            }
+            .padding()
+            .navigationTitle("")
+            .navigationBarHidden(true)
+        }
+        .onAppear {
+            localName = displayName
+            isTextFieldFocused = true
+        }
+    }
+    
+    private func saveIfValid() {
+        let trimmedName = localName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedName.isEmpty {
+            onSave(trimmedName)
+        }
+    }
+}
+
 struct MainContentView: View {
     @StateObject private var authManager = AuthenticationManager()
     @StateObject private var dashboardViewModel = DashboardViewModel()
@@ -37,11 +131,25 @@ struct MainContentView: View {
         }
         .onAppear {
             authManager.checkAuthenticationStatus()
+            
+            // Initialize greeting with authenticated user if already signed in
+            if authManager.isAuthenticated {
+                dashboardViewModel.updateGreetingForUser(authManager.userDisplayName)
+            }
         }
         .onChange(of: authManager.isAuthenticated) { isAuthenticated in
             if isAuthenticated {
                 // Update greeting when user becomes authenticated
                 dashboardViewModel.updateGreetingForUser(authManager.userDisplayName)
+            } else {
+                // Clear authenticated user data when user signs out
+                dashboardViewModel.clearAuthenticatedUser()
+            }
+        }
+        .onChange(of: authManager.currentUser?.displayName) { displayName in
+            if let displayName = displayName, authManager.isAuthenticated {
+                // Update greeting when user changes their display name
+                dashboardViewModel.updateGreetingForUser(displayName)
             }
         }
     }
@@ -53,6 +161,8 @@ struct AuthenticatedProfileView: View {
     @State private var showingAccountSettings = false
     @State private var showingPrivacySettings = false
     @State private var showingHelpSupport = false
+    @State private var showingNamePrompt = false
+    @State private var newDisplayName = ""
     
     var body: some View {
         NavigationView {
@@ -106,6 +216,15 @@ struct AuthenticatedProfileView: View {
                 // Account Actions
                 VStack(spacing: 12) {
                     ProfileActionRow(
+                        icon: "pencil",
+                        title: "Edit Display Name",
+                        action: { 
+                            newDisplayName = authManager.userDisplayName
+                            showingNamePrompt = true 
+                        }
+                    )
+                    
+                    ProfileActionRow(
                         icon: "gear",
                         title: "Account Settings",
                         action: { showingAccountSettings = true }
@@ -146,6 +265,27 @@ struct AuthenticatedProfileView: View {
             .background(AppColors.backgroundPrimary)
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
+        }
+        .onAppear {
+            // Check if we need to prompt for name
+            if authManager.shouldPromptForName {
+                showingNamePrompt = true
+                newDisplayName = ""
+            }
+        }
+        .sheet(isPresented: $showingNamePrompt) {
+            NameInputView(
+                displayName: $newDisplayName,
+                isPromptedBySystem: authManager.shouldPromptForName,
+                onSave: { name in
+                    authManager.updateDisplayName(name)
+                    showingNamePrompt = false
+                },
+                onCancel: {
+                    newDisplayName = ""
+                    showingNamePrompt = false
+                }
+            )
         }
         .alert("Sign Out", isPresented: $showingSignOutAlert) {
             Button("Cancel", role: .cancel) { }
