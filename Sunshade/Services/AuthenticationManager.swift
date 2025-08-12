@@ -152,6 +152,7 @@ class AuthenticationManager: NSObject, ObservableObject {
 extension AuthenticationManager: ASAuthorizationControllerDelegate {
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
         isLoading = false
+        shouldPromptForName = false // Reset prompt flag at start of authentication
         
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
             let userID = appleIDCredential.user
@@ -163,16 +164,25 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             
             print("🔍 Apple Sign-In Debug Info:")
             print("   User ID: \(userID)")
+            print("   FullName Object: \(String(describing: appleIDCredential.fullName))")
             print("   First Name: '\(firstName)' (isEmpty: \(firstName.isEmpty))")
             print("   Last Name: '\(lastName)' (isEmpty: \(lastName.isEmpty))")
             print("   Email: '\(email)' (isEmpty: \(email.isEmpty))")
+            print("   State: \(appleIDCredential.state ?? "nil")")
+            print("   AuthorizationCode: \(appleIDCredential.authorizationCode != nil ? "present" : "nil")")
             
-            // Try to load existing user data for this user ID
+            // Try to load existing user data for this user ID (only for email fallback, not for name)
             var existingUser: AuthenticatedUser?
             do {
-                existingUser = try keychainService.loadAuthenticatedUser()
-                if let existingUser = existingUser {
-                    print("   Found existing user: '\(existingUser.displayName)' (\(existingUser.email))")
+                let loadedUser = try keychainService.loadAuthenticatedUser()
+                print("   Found existing user: '\(loadedUser.displayName)' (\(loadedUser.email))")
+                // Important: Only use existing data for email, always prefer fresh name from Apple
+                if loadedUser.id == userID {
+                    print("   ✅ Same user re-authenticating")
+                    existingUser = loadedUser
+                } else {
+                    print("   ⚠️ Different user - not using existing data")
+                    existingUser = nil // Don't use data from different user
                 }
             } catch {
                 print("ℹ️ No existing user data found: \(error.localizedDescription)")
@@ -182,6 +192,12 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             var displayName = ""
             
             print("🔍 Display Name Resolution:")
+            print("   Available data check:")
+            print("     - firstName.isEmpty: \(firstName.isEmpty)")
+            print("     - lastName.isEmpty: \(lastName.isEmpty)")
+            print("     - email.isEmpty: \(email.isEmpty)")
+            print("     - existingUser: \(existingUser != nil ? "exists" : "nil")")
+            
             // First priority: Use new name information from Apple (first-time sign in)
             if !firstName.isEmpty && !lastName.isEmpty {
                 displayName = "\(firstName) \(lastName)"
@@ -203,6 +219,7 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
                 // Last resort: Generic fallback
                 displayName = "Apple User"
                 print("   ⚠️ Falling back to: '\(displayName)' - will prompt user to set name")
+                print("   🔍 This suggests Apple didn't provide name data despite showing it in the UI")
                 // Set flag to prompt user for their preferred name
                 shouldPromptForName = true
             }
