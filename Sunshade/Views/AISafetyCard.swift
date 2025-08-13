@@ -6,7 +6,8 @@ struct AISafetyCard: View {
     @ObservedObject var viewModel: DashboardViewModel
     @State private var intelligentRecommendations: [LegacyRecommendation] = []
     @State private var isGenerating = false
-    @State private var useIntelligentMode = true
+    @State private var useIntelligentMode = false // Start with false to avoid immediate crash
+    @State private var hasAppeared = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -74,12 +75,20 @@ struct AISafetyCard: View {
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
         .padding(.horizontal, 20)
         .onAppear {
-            if useIntelligentMode {
-                generateIntelligentRecommendations()
+            hasAppeared = true
+            // Delay intelligent mode activation to avoid initialization crashes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                if hasAppeared {
+                    useIntelligentMode = true
+                    generateIntelligentRecommendations()
+                }
             }
         }
+        .onDisappear {
+            hasAppeared = false
+        }
         .onChange(of: viewModel.currentUVIndex) { oldValue, newValue in
-            if useIntelligentMode {
+            if useIntelligentMode && hasAppeared {
                 generateIntelligentRecommendations()
             }
         }
@@ -148,16 +157,29 @@ struct AISafetyCard: View {
     // MARK: - Private Methods
     
     private func generateIntelligentRecommendations() {
-        guard useIntelligentMode else { return }
+        guard useIntelligentMode, hasAppeared else { return }
+        
+        // Prevent multiple concurrent generations
+        guard !isGenerating else { return }
         
         isGenerating = true
         
         Task {
-            let recommendations = await generateEnhancedRecommendations()
-            
-            await MainActor.run {
-                intelligentRecommendations = recommendations
-                isGenerating = false
+            do {
+                let recommendations = await generateEnhancedRecommendations()
+                
+                await MainActor.run {
+                    // Only update if we're still in the same state
+                    if hasAppeared && useIntelligentMode {
+                        intelligentRecommendations = recommendations
+                    }
+                    isGenerating = false
+                }
+            } catch {
+                await MainActor.run {
+                    print("❌ Failed to generate recommendations: \(error)")
+                    isGenerating = false
+                }
             }
         }
     }
