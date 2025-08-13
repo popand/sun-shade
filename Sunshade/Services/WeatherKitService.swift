@@ -111,12 +111,15 @@ class WeatherKitService: ObservableObject {
                 let highTempCelsius = day.highTemperature.converted(to: .celsius).value
                 let lowTempCelsius = day.lowTemperature.converted(to: .celsius).value
                 
+                // Estimate cloud cover based on weather condition since daily forecast may not have cloudCover
+                let dayCloudCover = estimateCloudCoverFromCondition(day.condition)
+                
                 return ForecastDay(
                     date: day.date,
                     highTemp: Int(highTempCelsius.rounded()),
                     lowTemp: Int(lowTempCelsius.rounded()),
                     uvIndex: Double(day.uvIndex.value),
-                    cloudCover: 50,
+                    cloudCover: dayCloudCover,
                     condition: mapWKCondition(day.condition),
                     iconName: mapIconName(day.symbolName)
                 )
@@ -196,6 +199,35 @@ class WeatherKitService: ObservableObject {
             return "50d"
         } else {
             return "01d"
+        }
+    }
+    
+    private func estimateCloudCoverFromCondition(_ condition: WeatherKit.WeatherCondition) -> Int {
+        let conditionString = String(describing: condition)
+        
+        // Estimate cloud cover percentage based on weather condition
+        if conditionString.contains("clear") || conditionString.contains("Clear") {
+            return 10 // Clear skies, minimal clouds
+        } else if conditionString.contains("partly") || conditionString.contains("Partly") ||
+                  conditionString.contains("few") || conditionString.contains("Few") {
+            return 30 // Partly cloudy
+        } else if conditionString.contains("mostly") || conditionString.contains("Mostly") ||
+                  conditionString.contains("scattered") || conditionString.contains("Scattered") {
+            return 60 // Mostly cloudy
+        } else if conditionString.contains("cloudy") || conditionString.contains("Cloudy") ||
+                  conditionString.contains("overcast") || conditionString.contains("Overcast") {
+            return 90 // Overcast
+        } else if conditionString.contains("rain") || conditionString.contains("Rain") ||
+                  conditionString.contains("storm") || conditionString.contains("Storm") ||
+                  conditionString.contains("drizzle") || conditionString.contains("Drizzle") {
+            return 85 // Rainy conditions typically have heavy cloud cover
+        } else if conditionString.contains("snow") || conditionString.contains("Snow") {
+            return 95 // Snow conditions typically overcast
+        } else if conditionString.contains("fog") || conditionString.contains("Fog") ||
+                  conditionString.contains("haze") || conditionString.contains("Haze") {
+            return 75 // Fog/haze often indicates significant cloud cover
+        } else {
+            return 50 // Default fallback for unknown conditions
         }
     }
     
