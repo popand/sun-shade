@@ -167,18 +167,22 @@ struct AISafetyCard: View {
         // This will be replaced with actual AI calls when iOS 26+ is available
         
         var recommendations: [LegacyRecommendation] = []
-        let uvIndex = viewModel.currentUVIndex
-        // Create WeatherData from DashboardViewModel properties
-        let weather = WeatherData(
-            temperature: Double(viewModel.temperature),
-            uvIndex: viewModel.currentUVIndex,
-            humidity: 60, // Default humidity since it's not in ViewModel
-            cloudCover: viewModel.cloudCover,
-            condition: viewModel.weatherCondition,
-            description: viewModel.weatherCondition,
-            iconName: "01d", // Default icon
-            forecast: viewModel.forecast
-        )
+        
+        // Safely access viewModel properties on main thread
+        var uvIndex: Double = 0
+        var temperature: Int = 0
+        var cloudCover: Int = 0
+        var weatherCondition: String = ""
+        var forecast: [ForecastDay] = []
+        
+        await MainActor.run {
+            uvIndex = viewModel.currentUVIndex
+            temperature = viewModel.temperature
+            cloudCover = viewModel.cloudCover
+            weatherCondition = viewModel.weatherCondition
+            forecast = viewModel.forecast
+        }
+        
         let currentHour = Calendar.current.component(.hour, from: Date())
         
         // Critical UV warning
@@ -209,7 +213,7 @@ struct AISafetyCard: View {
         }
         
         // Weather-specific advice
-        if weather.condition.lowercased().contains("clear") && uvIndex >= 8 {
+        if weatherCondition.lowercased().contains("clear") && uvIndex >= 8 {
             recommendations.append(LegacyRecommendation(
                 priority: "important",
                 message: "🌞 Clear skies amplify UV exposure. Use SPF 50+, wear UV-blocking sunglasses, and reapply sunscreen every hour.",
@@ -219,7 +223,7 @@ struct AISafetyCard: View {
                 iconName: "eye.fill",
                 colorName: "orange"
             ))
-        } else if weather.condition.lowercased().contains("cloud") {
+        } else if weatherCondition.lowercased().contains("cloud") {
             recommendations.append(LegacyRecommendation(
                 priority: "routine",
                 message: "☁️ Clouds provide partial protection but UV still penetrates. Apply SPF 30+ as clouds only block 20-40% of UV rays.",
@@ -232,10 +236,10 @@ struct AISafetyCard: View {
         }
         
         // Temperature-based hydration advice
-        if weather.temperature >= 25 && uvIndex >= 6 { // 77°F+
+        if Double(temperature) >= 25 && uvIndex >= 6 { // 77°F+
             recommendations.append(LegacyRecommendation(
                 priority: "important",
-                message: "🌡️ High temperature (\(Int(weather.temperature))°C) + UV \(Int(uvIndex)) increases dehydration risk. Drink water every 15 minutes when outdoors.",
+                message: "🌡️ High temperature (\(temperature)°C) + UV \(Int(uvIndex)) increases dehydration risk. Drink water every 15 minutes when outdoors.",
                 timeframe: "When active outdoors",
                 reasoning: "Heat and UV accelerate fluid loss",
                 category: "hydration",
