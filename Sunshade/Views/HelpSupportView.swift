@@ -63,7 +63,7 @@ struct HelpSupportView: View {
                         VStack(spacing: 12) {
                             FAQItem(
                                 question: "How accurate is the UV index data?",
-                                answer: "We use real-time weather data from reliable meteorological services. The UV index is updated regularly to provide the most accurate information for your location."
+                                answer: "We use Apple's WeatherKit for accurate, real-time UV index data. The information is updated regularly to provide the most precise UV readings for your location."
                             )
                             
                             FAQItem(
