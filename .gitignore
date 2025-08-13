@@ -99,3 +99,8 @@ SunSmart/Configuration.plist
 
 # Claude Code documentation
 CLAUDE.md
+
+# Development tools
+.cursor/
+.superdesign/
+.windsurfrules
