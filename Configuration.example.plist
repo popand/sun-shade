@@ -2,9 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>OpenWeatherMapAPIKey</key>
-	<string>YOUR_OPENWEATHERMAP_API_KEY_HERE</string>
-	<key>WeatherAPIBaseURL</key>
-	<string>https://api.openweathermap.org/data/3.0/onecall</string>
+	<!-- Add any app-specific configuration here -->
+	<!-- WeatherKit doesn't require API keys -->
 </dict>
 </plist>

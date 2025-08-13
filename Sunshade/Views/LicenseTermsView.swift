@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct LicenseTermsView: View {
+    @Environment(\.presentationMode) var presentationMode
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -50,6 +52,12 @@ struct LicenseTermsView: View {
             }
             .background(AppColors.backgroundPrimary)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarItems(
+                leading: Button("Done") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .foregroundColor(AppColors.primary)
+            )
         }
     }
     
@@ -81,6 +89,7 @@ struct SectionView<Content: View>: View {
                 .foregroundColor(AppColors.textSecondary)
                 .lineSpacing(4)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(Color.white)
         .cornerRadius(12)

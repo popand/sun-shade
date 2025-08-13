@@ -31,7 +31,7 @@ struct PrivacyNoticeView: View {
                         }
                         
                         SectionView(title: "Third-Party Services") {
-                            Text("Sunshade uses weather APIs to provide UV index information. These services have their own privacy policies. We do not share your personal information with these services beyond what's necessary for functionality.")
+                            Text("Sunshade uses Apple's WeatherKit to provide UV index information. Weather data is accessed through your Apple Developer account with no additional APIs or third-party services required.")
                         }
                         
                         SectionView(title: "Data Retention") {

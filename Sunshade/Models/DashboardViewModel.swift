@@ -17,7 +17,8 @@ class DashboardViewModel: ObservableObject {
     @Published var forecast: [ForecastDay] = []
     @Published var currentTanningQuality: TanningQuality = .fair
     
-    private let weatherService = WeatherService()
+    @available(iOS 16.0, *)
+    private let weatherKitService = WeatherKitService()
     private let locationManager = LocationManager()
     private let userProfile = UserProfile.shared
     private let exposureLogManager = ExposureLogManager.shared
@@ -263,7 +264,13 @@ class DashboardViewModel: ObservableObject {
         do {
             // Only pass location name if it's not a loading/error state
             let locationName = currentLocation.starts(with: "Loading") || currentLocation.starts(with: "Location access") || currentLocation.starts(with: "Location permission") ? "" : currentLocation
-            let weatherData = try await weatherService.fetchWeatherData(for: location, locationName: locationName)
+            
+            let weatherData: WeatherData
+            if #available(iOS 16.0, *) {
+                weatherData = try await weatherKitService.fetchWeatherData(for: location, locationName: locationName)
+            } else {
+                throw NSError(domain: "WeatherService", code: -1, userInfo: [NSLocalizedDescriptionKey: "WeatherKit requires iOS 16.0 or later"])
+            }
             
 
             
@@ -276,18 +283,11 @@ class DashboardViewModel: ObservableObject {
             currentTanningQuality = weatherData.currentTanningQuality
             
         } catch {
-
             weatherError = error.localizedDescription
+            print("❌ Weather data fetch failed: \(error.localizedDescription)")
             
-            // Use mock data as fallback only when API fails
-            let mockData = weatherService.getMockWeatherData()
-            currentUVIndex = mockData.uvIndex
-            // mockData.temperature is already in Celsius (converted in WeatherData init)
-            temperature = Int(mockData.temperature.rounded())
-            weatherCondition = mockData.description
-            cloudCover = mockData.cloudCover
-            forecast = mockData.forecast
-            currentTanningQuality = mockData.currentTanningQuality
+            // Don't use mock data - let the UI show the error state
+            // Keep the last known values or show default empty state
         }
         
         isLoading = false

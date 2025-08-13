@@ -5,7 +5,7 @@ A comprehensive iOS app for UV index monitoring and sun safety, built with Swift
 ## Features
 
 ### 🌡️ Real-Time UV Monitoring
-- Live UV index data from OpenWeatherMap API
+- Live UV index data from Apple WeatherKit (iOS 16+)
 - Location-based weather information
 - Current temperature and cloud cover
 - Color-coded UV level indicators (Low, Moderate, High, Very High, Extreme)
@@ -79,7 +79,7 @@ A comprehensive iOS app for UV index monitoring and sun safety, built with Swift
 - **Core Location**: GPS-based location services
 
 ### APIs & Services
-- **OpenWeatherMap API**: Real-time weather and UV data
+- **Apple WeatherKit**: Weather and UV data source (iOS 16+)
 - **Location Services**: Automatic location detection and reverse geocoding
 - **UserDefaults**: Persistent storage for user preferences and exposure logs
 
@@ -92,24 +92,23 @@ A comprehensive iOS app for UV index monitoring and sun safety, built with Swift
 ## Setup & Installation
 
 ### Prerequisites
-- iOS 15.0+
+- iOS 16.0+ (required for WeatherKit)
 - Xcode 14.0+
-- OpenWeatherMap API key
+- Apple Developer Account (for WeatherKit)
 
 ### Configuration
 1. Clone the repository
 2. Open `Sunshade.xcodeproj` in Xcode
-3. Add your OpenWeatherMap API key to `Configuration.swift`
+3. WeatherKit will work automatically with your Apple Developer account
 4. Enable location permissions in your iOS simulator/device
 5. Build and run the project
 
-### API Configuration
-```swift
-// In Configuration.swift
-static let openWeatherMapAPIKey = "YOUR_API_KEY_HERE"
-```
+### Weather Service Configuration
 
-Get your free API key from [OpenWeatherMap](https://openweathermap.org/api).
+**WeatherKit (iOS 16+)**:
+- No configuration needed - uses your Apple Developer account
+- 500,000 free API calls per month
+- No API keys required
 
 ## App Structure
 
@@ -129,7 +128,7 @@ Sunshade/
 │   ├── ProfileView.swift          # User profile management
 │   └── EducationView.swift        # Sun safety education
 ├── Services/
-│   ├── WeatherService.swift       # API integration
+│   ├── WeatherKitService.swift    # Apple WeatherKit integration
 │   └── LocationManager.swift      # GPS and location services
 └── Utils/
     ├── AppColors.swift            # UI color scheme
@@ -153,7 +152,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- Weather data provided by [OpenWeatherMap](https://openweathermap.org/)
+- Weather data provided by [Apple WeatherKit](https://developer.apple.com/weatherkit/)
 - UV safety guidelines from [WHO UV Index](https://www.who.int/news-room/q-a-detail/ultraviolet-(uv)-radiation)
 - Built with ❤️ using SwiftUI
 
