@@ -3,6 +3,8 @@ import AuthenticationServices
 
 struct AuthenticationView: View {
     @EnvironmentObject var authManager: AuthenticationManager
+    @State private var showTerms = false
+    @State private var showPrivacyPolicy = false
     
     var body: some View {
         NavigationView {
@@ -90,7 +92,7 @@ struct AuthenticationView: View {
                     
                     HStack(spacing: 4) {
                         Button("Terms of Service") {
-                            // Show terms
+                            showTerms = true
                         }
                         .font(.caption)
                         .foregroundColor(AppColors.primary)
@@ -100,7 +102,7 @@ struct AuthenticationView: View {
                             .foregroundColor(AppColors.textMuted)
                         
                         Button("Privacy Policy") {
-                            // Show privacy policy
+                            showPrivacyPolicy = true
                         }
                         .font(.caption)
                         .foregroundColor(AppColors.primary)
@@ -109,6 +111,12 @@ struct AuthenticationView: View {
                 .padding(.bottom, 30)
             }
             .background(AppColors.backgroundPrimary)
+            .sheet(isPresented: $showTerms) {
+                LicenseTermsView()
+            }
+            .sheet(isPresented: $showPrivacyPolicy) {
+                PrivacyNoticeView()
+            }
         }
     }
 }
