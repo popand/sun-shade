@@ -32,7 +32,7 @@ struct AuthenticationView: View {
                 
                 // Sign In Section
                 VStack(spacing: 20) {
-                    Text("Sign in to sync your data across devices and access personalized recommendations")
+                    Text("Sign in to access personalized recommendations. All your data is stored securely on this device only.")
                         .font(.body)
                         .foregroundColor(AppColors.textSecondary)
                         .multilineTextAlignment(.center)
