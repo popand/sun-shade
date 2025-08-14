@@ -195,9 +195,9 @@ struct DefaultRecommendationGenerator: RecommendationGenerator {
             ))
         }
         
-        // Weather-specific advice
-        let validatedCondition = SafetyConstants.Validation.validateWeatherCondition(condition)
-        if validatedCondition == "clear" && validatedUV >= SafetyConstants.UVIndex.highThreshold {
+        // Weather-specific advice (using type-safe weather mapping)
+        let weatherCondition = WeatherConditionMapper.mapCondition(condition)
+        if weatherCondition == .clear && validatedUV >= SafetyConstants.UVIndex.highThreshold {
             recommendations.append(SafetyRecommendation(
                 priority: SafetyPriority.important,
                 message: "🌞 Clear skies amplify UV. Use SPF 50+ and UV-blocking sunglasses.",
@@ -206,7 +206,7 @@ struct DefaultRecommendationGenerator: RecommendationGenerator {
                 iconName: "eye.fill",
                 color: Color.orange
             ))
-        } else if validatedCondition.contains("cloud") {
+        } else if [.partlyCloudy, .cloudy, .overcast].contains(weatherCondition) {
             recommendations.append(SafetyRecommendation(
                 priority: SafetyPriority.routine,
                 message: "☁️ Clouds provide partial protection. UV still penetrates - use SPF 30+.",

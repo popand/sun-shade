@@ -7,6 +7,167 @@ import SwiftUI
 import FoundationModels
 #endif
 
+// MARK: - Weather Condition Mapping
+
+/// Type-safe weather condition mapper that replaces error-prone string parsing
+struct WeatherConditionMapper {
+    
+    /// Comprehensive mapping of weather condition strings to enum values
+    private static let conditionMappings: [String: WeatherCondition] = [
+        // Clear conditions
+        "clear": .clear,
+        "sunny": .clear,
+        "fair": .clear,
+        "bright": .clear,
+        
+        // Partly cloudy conditions
+        "partly cloudy": .partlyCloudy,
+        "partly sunny": .partlyCloudy,
+        "mostly sunny": .partlyCloudy,
+        "mostly clear": .partlyCloudy,
+        "few clouds": .partlyCloudy,
+        
+        // Cloudy conditions
+        "cloudy": .cloudy,
+        "mostly cloudy": .cloudy,
+        "broken clouds": .cloudy,
+        "scattered clouds": .cloudy,
+        
+        // Overcast conditions
+        "overcast": .overcast,
+        "grey": .overcast,
+        "gray": .overcast,
+        
+        // Rainy conditions
+        "rain": .rainy,
+        "showers": .rainy,
+        "drizzle": .rainy,
+        "light rain": .rainy,
+        "moderate rain": .rainy,
+        "heavy rain": .rainy,
+        
+        // Stormy conditions
+        "thunderstorm": .stormy,
+        "storm": .stormy,
+        "severe weather": .stormy,
+        "lightning": .stormy,
+        
+        // Snowy conditions
+        "snow": .snowy,
+        "light snow": .snowy,
+        "heavy snow": .snowy,
+        "blizzard": .snowy,
+        "flurries": .snowy,
+        
+        // Foggy conditions
+        "fog": .foggy,
+        "mist": .foggy,
+        "haze": .foggy,
+        "smoky": .foggy,
+        
+        // Windy conditions
+        "windy": .windy,
+        "breezy": .windy,
+        "gusty": .windy
+    ]
+    
+    /// Fallback keywords for partial matching when exact match fails
+    private static let fallbackKeywords: [(keyword: String, condition: WeatherCondition)] = [
+        ("clear", .clear),
+        ("sunny", .clear),
+        ("partly", .partlyCloudy),
+        ("cloud", .cloudy),
+        ("overcast", .overcast),
+        ("rain", .rainy),
+        ("storm", .stormy),
+        ("snow", .snowy),
+        ("fog", .foggy),
+        ("wind", .windy)
+    ]
+    
+    /// Maps a weather condition string to a WeatherCondition enum with type safety
+    /// - Parameter conditionString: Raw weather condition string from API
+    /// - Returns: Mapped WeatherCondition enum value
+    static func mapCondition(_ conditionString: String) -> WeatherCondition {
+        let normalizedCondition = conditionString.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Try exact match first for best accuracy
+        if let exactMatch = conditionMappings[normalizedCondition] {
+            return exactMatch
+        }
+        
+        // Try partial matching with fallback keywords
+        for (keyword, condition) in fallbackKeywords {
+            if normalizedCondition.contains(keyword) {
+                return condition
+            }
+        }
+        
+        // Default to clear if no match found (conservative choice)
+        print("⚠️ Unknown weather condition: '\(conditionString)' - defaulting to clear")
+        return .clear
+    }
+    
+    #if DEBUG
+    /// Debug method to test weather condition mappings
+    /// - Parameter conditions: Array of weather condition strings to test
+    /// - Returns: Dictionary of input conditions to mapped enum values
+    static func testMappings(_ conditions: [String]) -> [String: WeatherCondition] {
+        return conditions.reduce(into: [:]) { result, condition in
+            result[condition] = mapCondition(condition)
+        }
+    }
+    #endif
+}
+
+// MARK: - Recommendation Caching
+
+/// Cache entry for AI recommendations with TTL support
+private struct RecommendationCacheEntry {
+    let recommendations: [AIRecommendation]
+    let timestamp: Date
+    let parameters: CacheKey
+    
+    /// Check if cache entry is still valid based on TTL
+    func isValid(ttl: TimeInterval) -> Bool {
+        return Date().timeIntervalSince(timestamp) < ttl
+    }
+}
+
+/// Cache key for recommendations based on environmental parameters
+private struct CacheKey: Hashable {
+    let uvIndex: Int  // Rounded to nearest integer for cache efficiency
+    let temperature: Int // Rounded temperature
+    let weatherCondition: WeatherCondition
+    let userProfileHash: Int // Hash of user profile for personalization
+    let timeSlot: Int // Hour of day for time-based recommendations
+    
+    init(uvIndex: Double, weather: WeatherData, userProfile: UserSunProfile, currentTime: Date) {
+        self.uvIndex = Int(uvIndex.rounded())
+        self.temperature = Int(weather.temperature.rounded())
+        self.weatherCondition = WeatherConditionMapper.mapCondition(weather.condition)
+        self.userProfileHash = userProfile.hashValue
+        self.timeSlot = Calendar.current.component(.hour, from: currentTime)
+    }
+}
+
+/// Hash extension for UserSunProfile to enable caching
+extension UserSunProfile: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(skinType)
+        hasher.combine(ageRange)
+        hasher.combine(photosensitiveMedications)
+        hasher.combine(activities.map { $0.rawValue }.sorted()) // Sort for consistent hashing
+    }
+    
+    static func == (lhs: UserSunProfile, rhs: UserSunProfile) -> Bool {
+        return lhs.skinType == rhs.skinType &&
+               lhs.ageRange == rhs.ageRange &&
+               lhs.photosensitiveMedications == rhs.photosensitiveMedications &&
+               Set(lhs.activities) == Set(rhs.activities)
+    }
+}
+
 /// AI-powered sun safety recommendation service
 /// Currently uses intelligent rule-based system, will integrate Apple's Foundation Models when available
 class AIRecommendationService: ObservableObject {
@@ -16,6 +177,20 @@ class AIRecommendationService: ObservableObject {
     @Published var isGenerating = false
     @Published var lastError: Error?
     @Published var isAvailable = false
+    
+    // MARK: - Caching Properties
+    
+    /// In-memory cache for recommendations with TTL support
+    private var recommendationCache: [CacheKey: RecommendationCacheEntry] = [:]
+    
+    /// Cache TTL in seconds (5 minutes default)
+    private let cacheTTL: TimeInterval = 300
+    
+    /// Maximum cache size to prevent memory issues
+    private let maxCacheSize = 50
+    
+    /// Queue for thread-safe cache operations
+    private let cacheQueue = DispatchQueue(label: "ai.recommendation.cache", qos: .utility)
     
     #if canImport(FoundationModels)
     private var foundationModelSession: FoundationModelSession?
@@ -48,14 +223,23 @@ class AIRecommendationService: ObservableObject {
         // Use actual user profile if available, otherwise use safe defaults
         let actualProfile = userProfile ?? UserProfile.shared.toUserSunProfile()
         
+        // Check cache first
+        let cacheKey = CacheKey(uvIndex: uvIndex, weather: weather, userProfile: actualProfile, currentTime: currentTime)
+        
+        if let cachedRecommendations = getCachedRecommendations(for: cacheKey) {
+            return cachedRecommendations
+        }
+        
         // Check if Foundation Models is available
         guard isAvailable else {
-            return await generateFallbackRecommendations(
+            let fallbackRecommendations = await generateFallbackRecommendations(
                 uvIndex: uvIndex,
                 weather: weather,
                 userProfile: actualProfile,
                 currentTime: currentTime
             )
+            cacheRecommendations(fallbackRecommendations, for: cacheKey)
+            return fallbackRecommendations
         }
         
         do {
@@ -71,19 +255,23 @@ class AIRecommendationService: ObservableObject {
                 location: location
             )
             
-            return recommendations.sortedByPriority
+            let sortedRecommendations = recommendations.sortedByPriority
+            cacheRecommendations(sortedRecommendations, for: cacheKey)
+            return sortedRecommendations
             
         } catch {
             lastError = error
             print("❌ AI Recommendation generation failed: \(error.localizedDescription)")
             
             // Fallback to rule-based recommendations
-            return await generateFallbackRecommendations(
+            let fallbackRecommendations = await generateFallbackRecommendations(
                 uvIndex: uvIndex,
                 weather: weather,
                 userProfile: actualProfile,
                 currentTime: currentTime
             )
+            cacheRecommendations(fallbackRecommendations, for: cacheKey)
+            return fallbackRecommendations
         }
     }
     
@@ -305,19 +493,7 @@ class AIRecommendationService: ObservableObject {
             }
         }()
         
-        let weatherCondition: WeatherCondition = {
-            let condition = weather.condition.lowercased()
-            if condition.contains("clear") { return .clear }
-            if condition.contains("partly") { return .partlyCloudy }
-            if condition.contains("cloudy") { return .cloudy }
-            if condition.contains("overcast") { return .overcast }
-            if condition.contains("rain") { return .rainy }
-            if condition.contains("storm") { return .stormy }
-            if condition.contains("snow") { return .snowy }
-            if condition.contains("fog") { return .foggy }
-            if condition.contains("wind") { return .windy }
-            return .clear
-        }()
+        let weatherCondition = WeatherConditionMapper.mapCondition(weather.condition)
         
         return EnvironmentalContext(
             uvIndex: uvIndex,
@@ -589,5 +765,80 @@ extension AIRecommendationService {
         )
         
         return legacyRecommendations.map { $0.message }
+    }
+    
+    // MARK: - Cache Management Methods
+    
+    /// Retrieves cached recommendations if valid and available
+    /// - Parameter key: Cache key for the request parameters
+    /// - Returns: Cached recommendations if valid, nil otherwise
+    private func getCachedRecommendations(for key: CacheKey) -> [AIRecommendation]? {
+        return cacheQueue.sync {
+            guard let cacheEntry = recommendationCache[key],
+                  cacheEntry.isValid(ttl: cacheTTL) else {
+                return nil
+            }
+            
+            return cacheEntry.recommendations
+        }
+    }
+    
+    /// Caches recommendations with the given key
+    /// - Parameters:
+    ///   - recommendations: Recommendations to cache
+    ///   - key: Cache key for the parameters
+    private func cacheRecommendations(_ recommendations: [AIRecommendation], for key: CacheKey) {
+        cacheQueue.async {
+            // Clean expired entries before adding new one
+            self.cleanExpiredCache()
+            
+            // Limit cache size to prevent memory issues
+            if self.recommendationCache.count >= self.maxCacheSize {
+                self.evictOldestCacheEntry()
+            }
+            
+            // Add new cache entry
+            let cacheEntry = RecommendationCacheEntry(
+                recommendations: recommendations,
+                timestamp: Date(),
+                parameters: key
+            )
+            
+            self.recommendationCache[key] = cacheEntry
+        }
+    }
+    
+    /// Removes expired cache entries
+    private func cleanExpiredCache() {
+        let now = Date()
+        recommendationCache = recommendationCache.filter { _, entry in
+            entry.isValid(ttl: cacheTTL)
+        }
+    }
+    
+    /// Evicts the oldest cache entry when cache is full
+    private func evictOldestCacheEntry() {
+        guard let oldestKey = recommendationCache.min(by: { $0.value.timestamp < $1.value.timestamp })?.key else {
+            return
+        }
+        recommendationCache.removeValue(forKey: oldestKey)
+    }
+    
+    /// Clears all cached recommendations (useful for testing or memory pressure)
+    func clearCache() {
+        cacheQueue.async {
+            self.recommendationCache.removeAll()
+        }
+    }
+    
+    /// Returns current cache statistics for monitoring
+    var cacheStats: (count: Int, memoryUsage: String) {
+        return cacheQueue.sync {
+            let count = recommendationCache.count
+            let bytesPerEntry = MemoryLayout<RecommendationCacheEntry>.size
+            let totalBytes = count * bytesPerEntry
+            let memoryUsage = ByteCountFormatter.string(fromByteCount: Int64(totalBytes), countStyle: .memory)
+            return (count: count, memoryUsage: memoryUsage)
+        }
     }
 }

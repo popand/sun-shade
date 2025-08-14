@@ -20,6 +20,13 @@ struct UnifiedSafetyCard: View {
     private let displayMode: DisplayMode
     private let showModeToggle: Bool
     
+    // MARK: - Debounced Update State
+    
+    @State private var updateTask: Task<Void, Never>?
+    
+    /// Debounce delay in seconds to prevent excessive updates
+    private let debounceDelay: Double = 0.5
+    
     // MARK: - Initialization
     
     init(
@@ -56,14 +63,17 @@ struct UnifiedSafetyCard: View {
         .onAppear {
             initializeRecommendations()
         }
-        .onChange(of: viewModel.currentUVIndex) { _, _ in
-            updateRecommendations()
+        .onChange(of: WeatherConditions(
+            uvIndex: viewModel.currentUVIndex,
+            temperature: viewModel.temperature,
+            condition: viewModel.weatherCondition,
+            cloudCover: viewModel.cloudCover
+        )) { _, newConditions in
+            debouncedUpdateRecommendations()
         }
-        .onChange(of: viewModel.temperature) { _, _ in
-            updateRecommendations()
-        }
-        .onChange(of: viewModel.weatherCondition) { _, _ in
-            updateRecommendations()
+        .onDisappear {
+            // Cancel any pending updates when view disappears
+            updateTask?.cancel()
         }
     }
     
@@ -259,6 +269,38 @@ struct UnifiedSafetyCard: View {
             condition: viewModel.weatherCondition
         )
     }
+    
+    /// Debounced update method that prevents excessive recommendation updates
+    /// 
+    /// This method implements a debouncing mechanism that:
+    /// - Prevents multiple rapid API calls when weather data changes quickly
+    /// - Reduces battery usage by limiting unnecessary computation
+    /// - Improves UI responsiveness by avoiding blocking operations
+    /// - Cancels pending updates when new data arrives
+    private func debouncedUpdateRecommendations() {
+        // Cancel any existing update task to prevent stale updates
+        updateTask?.cancel()
+        
+        // Create new debounced update task
+        updateTask = Task { @MainActor in
+            do {
+                // Wait for debounce delay to allow rapid changes to settle
+                try await Task.sleep(for: .seconds(debounceDelay))
+                
+                // Check if task was cancelled during sleep
+                guard !Task.isCancelled else { return }
+                
+                // Perform the actual update on main thread
+                updateRecommendations()
+                
+            } catch {
+                // Handle cancellation gracefully
+                if !(error is CancellationError) {
+                    print("⚠️ Debounced update failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Unified Recommendation Row
@@ -350,6 +392,39 @@ private struct SimpleRecommendationRow: View {
 }
 
 // MARK: - Preview Provider
+
+// MARK: - Weather Conditions Helper
+
+/// Combines weather conditions into a single Equatable struct for efficient onChange handling
+/// 
+/// This approach provides several benefits:
+/// - Reduces from 3-4 separate onChange handlers to 1 combined handler
+/// - Prevents race conditions between multiple simultaneous updates
+/// - Enables debouncing across all weather parameters simultaneously
+/// - Improves performance by reducing SwiftUI update cycles
+private struct WeatherConditions: Equatable {
+    let uvIndex: Double
+    let temperature: Int
+    let condition: String
+    let cloudCover: Int
+    
+    /// Threshold for considering UV index changes significant (prevents micro-updates)
+    private static let uvIndexThreshold: Double = 0.1
+    
+    /// Temperature threshold for significant changes (prevents 1-degree micro-updates)
+    private static let temperatureThreshold: Int = 1
+    
+    static func == (lhs: WeatherConditions, rhs: WeatherConditions) -> Bool {
+        // Use thresholds to prevent excessive updates from minor changes
+        let uvIndexEqual = abs(lhs.uvIndex - rhs.uvIndex) < uvIndexThreshold
+        let temperatureEqual = abs(lhs.temperature - rhs.temperature) < temperatureThreshold
+        
+        return uvIndexEqual &&
+               temperatureEqual &&
+               lhs.condition == rhs.condition &&
+               lhs.cloudCover == rhs.cloudCover
+    }
+}
 
 struct UnifiedSafetyCard_Previews: PreviewProvider {
     static var previews: some View {
