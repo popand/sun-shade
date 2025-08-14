@@ -170,10 +170,11 @@ struct DefaultRecommendationGenerator: RecommendationGenerator {
         let currentHour = Calendar.current.component(.hour, from: Date())
         
         // Critical UV warning
-        if uvIndex >= 10 {
+        let validatedUV = SafetyConstants.UVIndex.validate(uvIndex)
+        if validatedUV >= SafetyConstants.UVIndex.extremeThreshold {
             recommendations.append(SafetyRecommendation(
                 priority: SafetyPriority.critical,
-                message: "⚠️ EXTREME UV Alert! UV index of \(Int(uvIndex)) can cause severe burns in under 5 minutes.",
+                message: "⚠️ EXTREME UV Alert! UV index of \(Int(validatedUV)) can cause severe burns in under 5 minutes.",
                 timeframe: "Next 6 hours",
                 category: "timing",
                 iconName: "exclamationmark.triangle.fill",
@@ -182,8 +183,8 @@ struct DefaultRecommendationGenerator: RecommendationGenerator {
         }
         
         // Peak hours warning
-        if currentHour >= 10 && currentHour <= 16 && uvIndex >= 6 {
-            let safeTime = max(5, Int(120 / uvIndex))
+        if SafetyConstants.PeakHours.isDuringPeakHours(currentHour) && validatedUV >= SafetyConstants.UVIndex.moderateThreshold {
+            let safeTime = SafetyConstants.ExposureTime.calculateSafeMinutes(uvIndex: validatedUV)
             recommendations.append(SafetyRecommendation(
                 priority: SafetyPriority.urgent,
                 message: "☀️ Peak UV hours. Limit exposure to \(safeTime) minutes or seek shade.",
@@ -195,7 +196,8 @@ struct DefaultRecommendationGenerator: RecommendationGenerator {
         }
         
         // Weather-specific advice
-        if condition.lowercased().contains("clear") && uvIndex >= 7 {
+        let validatedCondition = SafetyConstants.Validation.validateWeatherCondition(condition)
+        if validatedCondition == "clear" && validatedUV >= SafetyConstants.UVIndex.highThreshold {
             recommendations.append(SafetyRecommendation(
                 priority: SafetyPriority.important,
                 message: "🌞 Clear skies amplify UV. Use SPF 50+ and UV-blocking sunglasses.",
@@ -204,7 +206,7 @@ struct DefaultRecommendationGenerator: RecommendationGenerator {
                 iconName: "eye.fill",
                 color: Color.orange
             ))
-        } else if condition.lowercased().contains("cloud") {
+        } else if validatedCondition.contains("cloud") {
             recommendations.append(SafetyRecommendation(
                 priority: SafetyPriority.routine,
                 message: "☁️ Clouds provide partial protection. UV still penetrates - use SPF 30+.",
@@ -216,10 +218,11 @@ struct DefaultRecommendationGenerator: RecommendationGenerator {
         }
         
         // Temperature-based hydration
-        if temperature >= 25 && uvIndex >= 6 {
+        let validatedTemp = SafetyConstants.Temperature.validateCelsius(Double(temperature))
+        if validatedTemp >= SafetyConstants.Temperature.warmThresholdCelsius && validatedUV >= SafetyConstants.UVIndex.moderateThreshold {
             recommendations.append(SafetyRecommendation(
                 priority: SafetyPriority.important,
-                message: "🌡️ High temp (\(temperature)°C) + UV \(Int(uvIndex)) increases dehydration risk.",
+                message: "🌡️ High temp (\(Int(validatedTemp))°C) + UV \(Int(validatedUV)) increases dehydration risk.",
                 timeframe: "When active outdoors",
                 category: "hydration",
                 iconName: "drop.fill",
@@ -228,10 +231,10 @@ struct DefaultRecommendationGenerator: RecommendationGenerator {
         }
         
         // Activity timing
-        if currentHour >= 6 && currentHour <= 9 && uvIndex <= 5 {
+        if currentHour >= 6 && currentHour <= 9 && validatedUV <= SafetyConstants.UVIndex.lowThreshold + 2 {
             recommendations.append(SafetyRecommendation(
                 priority: SafetyPriority.routine,
-                message: "🏃 Great time for outdoor exercise! UV is moderate (\(Int(uvIndex))).",
+                message: "🏃 Great time for outdoor exercise! UV is moderate (\(Int(validatedUV))).",
                 timeframe: "Morning hours",
                 category: "activity",
                 iconName: "figure.run",
@@ -240,10 +243,10 @@ struct DefaultRecommendationGenerator: RecommendationGenerator {
         }
         
         // Evening recommendation
-        if currentHour >= 17 && currentHour <= 19 && uvIndex <= 3 {
+        if currentHour >= 17 && currentHour <= 19 && validatedUV <= SafetyConstants.UVIndex.lowThreshold {
             recommendations.append(SafetyRecommendation(
                 priority: SafetyPriority.routine,
-                message: "🌅 Golden hour! Low UV (\(Int(uvIndex))) - ideal for outdoor activities.",
+                message: "🌅 Golden hour! Low UV (\(Int(validatedUV))) - ideal for outdoor activities.",
                 timeframe: "Evening",
                 category: "activity",
                 iconName: "camera.fill",
@@ -252,7 +255,7 @@ struct DefaultRecommendationGenerator: RecommendationGenerator {
         }
         
         // Basic protection
-        if uvIndex >= 3 {
+        if validatedUV >= SafetyConstants.UVIndex.lowThreshold {
             recommendations.append(SafetyRecommendation(
                 priority: SafetyPriority.routine,
                 message: "🧴 Apply broad-spectrum SPF 30+ sunscreen 15 minutes before exposure.",
@@ -264,10 +267,10 @@ struct DefaultRecommendationGenerator: RecommendationGenerator {
         }
         
         // Reapplication reminder
-        if uvIndex >= 6 {
+        if validatedUV >= SafetyConstants.UVIndex.moderateThreshold {
             recommendations.append(SafetyRecommendation(
                 priority: SafetyPriority.routine,
-                message: "🔄 High UV requires reapplication every 90 minutes when outdoors.",
+                message: "🔄 High UV requires reapplication every \(SafetyConstants.ExposureTime.sunscreenReapplicationIntervalMinutes) minutes when outdoors.",
                 timeframe: "Throughout exposure",
                 category: "protection",
                 iconName: "arrow.clockwise",

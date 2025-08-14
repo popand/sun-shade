@@ -97,7 +97,9 @@ struct NameInputView: View {
 struct MainContentView: View {
     @StateObject private var authManager = AuthenticationManager()
     @StateObject private var dashboardViewModel = DashboardViewModel()
+    @StateObject private var userProfile = UserProfile.shared
     @State private var showDebugOptions = false
+    @State private var showingSkinTypeOnboarding = false
     
     var body: some View {
         Group {
@@ -135,12 +137,18 @@ struct MainContentView: View {
             // Initialize greeting with authenticated user if already signed in
             if authManager.isAuthenticated {
                 dashboardViewModel.updateGreetingForUser(authManager.userDisplayName)
+                
+                // Check if we need to show skin type onboarding
+                checkForSkinTypeOnboarding()
             }
         }
         .onChange(of: authManager.isAuthenticated) { isAuthenticated in
             if isAuthenticated {
                 // Update greeting when user becomes authenticated
                 dashboardViewModel.updateGreetingForUser(authManager.userDisplayName)
+                
+                // Check for skin type onboarding when user signs in
+                checkForSkinTypeOnboarding()
             } else {
                 // Clear authenticated user data when user signs out
                 dashboardViewModel.clearAuthenticatedUser()
@@ -150,6 +158,19 @@ struct MainContentView: View {
             if let displayName = displayName, authManager.isAuthenticated {
                 // Update greeting when user changes their display name
                 dashboardViewModel.updateGreetingForUser(displayName)
+            }
+        }
+        .sheet(isPresented: $showingSkinTypeOnboarding) {
+            SkinTypeOnboardingView()
+        }
+    }
+    
+    private func checkForSkinTypeOnboarding() {
+        // Show skin type onboarding if user hasn't completed it
+        if !userProfile.hasCompletedSkinTypeOnboarding {
+            // Add a small delay to let the main UI load first
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                showingSkinTypeOnboarding = true
             }
         }
     }

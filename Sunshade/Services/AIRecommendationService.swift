@@ -45,12 +45,15 @@ class AIRecommendationService: ObservableObject {
         isGenerating = true
         defer { isGenerating = false }
         
+        // Use actual user profile if available, otherwise use safe defaults
+        let actualProfile = userProfile ?? UserProfile.shared.toUserSunProfile()
+        
         // Check if Foundation Models is available
         guard isAvailable else {
             return await generateFallbackRecommendations(
                 uvIndex: uvIndex,
                 weather: weather,
-                userProfile: userProfile,
+                userProfile: actualProfile,
                 currentTime: currentTime
             )
         }
@@ -64,7 +67,7 @@ class AIRecommendationService: ObservableObject {
             
             let recommendations = try await generateAIRecommendations(
                 context: context,
-                userProfile: userProfile ?? getDefaultUserProfile(),
+                userProfile: actualProfile,
                 location: location
             )
             
@@ -78,7 +81,7 @@ class AIRecommendationService: ObservableObject {
             return await generateFallbackRecommendations(
                 uvIndex: uvIndex,
                 weather: weather,
-                userProfile: userProfile,
+                userProfile: actualProfile,
                 currentTime: currentTime
             )
         }
@@ -208,7 +211,7 @@ class AIRecommendationService: ObservableObject {
         USER PROFILE:
         - Skin Type: \(userProfile.skinType.description) (Type \(userProfile.skinType.rawValue))
         - Age Range: \(userProfile.ageRange.rawValue)
-        - Photosensitive Medications: \(userProfile.photosentitivemedications)
+        - Photosensitive Medications: \(userProfile.photosensitiveMedications)
         - Activities: \(userProfile.activities.map { $0.rawValue }.joined(separator: ", "))
         - Preferences: Shade(\(userProfile.preferences.prefersShade)), Sunscreen(\(userProfile.preferences.usesSunscreen))
         
@@ -328,18 +331,19 @@ class AIRecommendationService: ObservableObject {
     }
     
     private func getDefaultUserProfile() -> UserSunProfile {
-        // TODO: Load from user preferences or onboarding
+        // Use most conservative skin type for safety
+        // This should only be used when user hasn't completed onboarding
         return UserSunProfile(
-            skinType: .type3, // Medium skin as default
+            skinType: .type1, // Most conservative - very fair skin (burns easily)
             ageRange: .adult,
-            photosentitivemedications: false,
-            activities: [.walking, .running],
+            photosensitiveMedications: false, // Conservative assumption
+            activities: [.walking], // Conservative activity set
             preferences: SunExposurePreferences(
-                prefersShade: true,
-                usesSunscreen: true,
-                wearsProtectiveClothing: false,
-                flexibleTiming: true,
-                seeksTan: false
+                prefersShade: true,   // Conservative: prefer shade
+                usesSunscreen: true,  // Conservative: always use sunscreen
+                wearsProtectiveClothing: true, // Conservative: wear protection
+                flexibleTiming: true, // Conservative: flexible for safety
+                seeksTan: false      // Conservative: no tanning
             )
         )
     }
@@ -352,12 +356,13 @@ class AIRecommendationService: ObservableObject {
         var recommendations: [AIRecommendation] = []
         
         // Critical recommendations for extreme UV
-        if context.uvIndex >= 10 {
+        let validatedUV = SafetyConstants.UVIndex.validate(context.uvIndex)
+        if validatedUV >= SafetyConstants.UVIndex.extremeThreshold {
             recommendations.append(AIRecommendation(
                 priority: .critical,
                 message: "Extreme UV alert! Avoid outdoor activities between 10 AM - 4 PM. If you must go outside, seek immediate shade and use maximum protection.",
                 timeframe: "Next 6 hours",
-                reasoning: "UV index of \(context.uvIndex) can cause severe burns in under 5 minutes for all skin types.",
+                reasoning: "UV index of \(validatedUV) can cause severe burns in under 5 minutes for all skin types.",
                 category: .timing,
                 iconName: "exclamationmark.triangle.fill",
                 colorScheme: .red
@@ -371,12 +376,12 @@ class AIRecommendationService: ObservableObject {
             weather: context.weather
         )
         
-        if protectionTime < 15 {
+        if protectionTime < SafetyConstants.ExposureTime.minimumSafeExposureMinutes {
             recommendations.append(AIRecommendation(
                 priority: .urgent,
                 message: "Your \(userProfile.skinType.description.lowercased()) skin can burn in just \(protectionTime) minutes today. Apply SPF 50+ immediately and seek shade.",
                 timeframe: "Before going outside",
-                reasoning: "UV index \(context.uvIndex) significantly reduces safe exposure time for skin type \(userProfile.skinType.rawValue).",
+                reasoning: "UV index \(validatedUV) significantly reduces safe exposure time for skin type \(userProfile.skinType.rawValue).",
                 category: .protection,
                 iconName: "shield.fill",
                 colorScheme: .orange
@@ -412,10 +417,10 @@ class AIRecommendationService: ObservableObject {
         }
         
         // Hydration recommendations
-        if context.uvIndex >= 6 && context.weather != .rainy {
+        if validatedUV >= SafetyConstants.UVIndex.moderateThreshold && context.weather != .rainy {
             recommendations.append(AIRecommendation(
                 priority: .routine,
-                message: "High UV and clear weather increase dehydration risk. Drink water every 15-20 minutes when outdoors.",
+                message: "High UV and clear weather increase dehydration risk. Drink water every \(SafetyConstants.Hydration.waterIntakeIntervalMinutes) minutes when outdoors.",
                 timeframe: "Throughout the day",
                 reasoning: "UV exposure combined with \(context.weather.rawValue) weather conditions accelerate fluid loss.",
                 category: .hydration,
@@ -425,7 +430,7 @@ class AIRecommendationService: ObservableObject {
         }
         
         // Medication considerations
-        if userProfile.photosentitivemedications {
+        if userProfile.photosensitiveMedications {
             recommendations.append(AIRecommendation(
                 priority: .urgent,
                 message: "Your medication increases sun sensitivity. Reduce outdoor time by 50% and use extra protection today.",
@@ -449,13 +454,13 @@ class AIRecommendationService: ObservableObject {
         let uvAdjustment = baseTime / max(uvIndex, 1.0)
         let weatherAdjustment = uvAdjustment * weather.uvModifier
         
-        return max(5, Int(weatherAdjustment))
+        return max(SafetyConstants.ExposureTime.minimumSafeExposureMinutes, Int(weatherAdjustment))
     }
     
     private func generateFallbackRecommendations(
         uvIndex: Double,
         weather: WeatherData,
-        userProfile: UserSunProfile?,
+        userProfile: UserSunProfile,
         currentTime: Date
     ) async -> [AIRecommendation] {
         
@@ -466,8 +471,8 @@ class AIRecommendationService: ObservableObject {
             currentTime: currentTime
         )
         
-        // Convert to AI recommendation format
-        return legacyRecommendations.map { legacy in
+        // Add safety warning if using defaults
+        var aiRecommendations = legacyRecommendations.map { legacy in
             AIRecommendation(
                 priority: RecommendationPriority(rawValue: legacy.priority) ?? .routine,
                 message: legacy.message,
@@ -478,6 +483,21 @@ class AIRecommendationService: ObservableObject {
                 colorScheme: RecommendationColor(rawValue: legacy.colorName) ?? .blue
             )
         }
+        
+        // Add safety warning if user hasn't completed onboarding
+        if !UserProfile.shared.hasCompletedSkinTypeOnboarding {
+            aiRecommendations.insert(AIRecommendation(
+                priority: .urgent,
+                message: "⚠️ Using conservative skin type defaults. Set your actual skin type in settings for personalized recommendations.",
+                timeframe: "Update settings",
+                reasoning: "Accurate skin type information is essential for safe sun exposure recommendations.",
+                category: .medical,
+                iconName: "person.crop.circle.badge.exclamationmark",
+                colorScheme: .orange
+            ), at: 0)
+        }
+        
+        return aiRecommendations
     }
 }
 

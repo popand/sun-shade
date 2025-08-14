@@ -132,13 +132,31 @@ struct UserSunProfile {
     let ageRange: AgeRange
     
     /// Current medications that affect photosensitivity
-    let photosentitivemedications: Bool
+    let photosensitiveMedications: Bool
     
     /// Typical outdoor activities
     let activities: [OutdoorActivity]
     
     /// Sun exposure preferences
     let preferences: SunExposurePreferences
+    
+    /// Create a validated user profile with safe defaults
+    /// Uses most conservative settings for user safety
+    static func validated(
+        skinType: SkinType = .type1, // Most conservative - burns easily
+        ageRange: AgeRange = .adult,
+        photosensitiveMedications: Bool = false,
+        activities: [OutdoorActivity] = [.walking],
+        preferences: SunExposurePreferences = SunExposurePreferences()
+    ) -> UserSunProfile {
+        return UserSunProfile(
+            skinType: skinType,
+            ageRange: ageRange,
+            photosensitiveMedications: photosensitiveMedications,
+            activities: activities.isEmpty ? [.walking] : activities,
+            preferences: preferences
+        )
+    }
 }
 
 enum SkinType: Int, CaseIterable {
@@ -224,6 +242,21 @@ struct SunExposurePreferences {
     
     /// Interested in tanning
     let seeksTan: Bool
+    
+    /// Create preferences with safe defaults
+    init(
+        prefersShade: Bool = true,
+        usesSunscreen: Bool = true,
+        wearsProtectiveClothing: Bool = false,
+        flexibleTiming: Bool = true,
+        seeksTan: Bool = false
+    ) {
+        self.prefersShade = prefersShade
+        self.usesSunscreen = usesSunscreen
+        self.wearsProtectiveClothing = wearsProtectiveClothing
+        self.flexibleTiming = flexibleTiming
+        self.seeksTan = seeksTan
+    }
 }
 
 // MARK: - Environmental Context
@@ -250,6 +283,39 @@ struct EnvironmentalContext {
     
     /// Season
     let season: Season
+    
+    /// Create validated environmental context
+    static func validated(
+        uvIndex: Double,
+        weather: WeatherCondition = .clear,
+        airQuality: AirQualityLevel? = nil,
+        pollenLevel: PollenLevel? = nil,
+        altitude: Double = 0,
+        timeOfDay: TimeOfDay,
+        season: Season
+    ) -> EnvironmentalContext {
+        return EnvironmentalContext(
+            uvIndex: SafetyConstants.UVIndex.validate(uvIndex),
+            weather: weather,
+            airQuality: airQuality,
+            pollenLevel: pollenLevel,
+            altitude: max(0, altitude), // Ensure non-negative altitude
+            timeOfDay: timeOfDay,
+            season: season
+        )
+    }
+    
+    /// Check if conditions are safe for outdoor activities
+    var isSafeForOutdoorActivity: Bool {
+        return uvIndex < SafetyConstants.UVIndex.extremeThreshold &&
+               weather != .stormy &&
+               airQuality != .hazardous
+    }
+    
+    /// Get recommended SPF based on conditions
+    var recommendedSPF: Int {
+        return SafetyConstants.SPF.recommended(for: uvIndex)
+    }
 }
 
 enum WeatherCondition: String, CaseIterable {

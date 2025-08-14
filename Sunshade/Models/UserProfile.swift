@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 enum TemperatureUnit: String, CaseIterable {
     case celsius = "celsius"
@@ -48,9 +49,29 @@ class UserProfile: ObservableObject {
         }
     }
     
-    @Published var skinType: String {
+    @Published var skinType: SkinType {
         didSet {
-            UserDefaults.standard.set(skinType, forKey: "userSkinType")
+            UserDefaults.standard.set(skinType.rawValue, forKey: "userSkinType")
+            hasCompletedSkinTypeOnboarding = true
+        }
+    }
+    
+    @Published var ageRange: AgeRange {
+        didSet {
+            UserDefaults.standard.set(ageRange.rawValue, forKey: "userAgeRange")
+        }
+    }
+    
+    @Published var photosensitiveMedications: Bool {
+        didSet {
+            UserDefaults.standard.set(photosensitiveMedications, forKey: "userPhotosensitiveMedications")
+        }
+    }
+    
+    @Published var preferredActivities: [OutdoorActivity] {
+        didSet {
+            let activityStrings = preferredActivities.map { $0.rawValue }
+            UserDefaults.standard.set(activityStrings, forKey: "userPreferredActivities")
         }
     }
     
@@ -60,12 +81,65 @@ class UserProfile: ObservableObject {
         }
     }
     
+    @Published var hasCompletedSkinTypeOnboarding: Bool {
+        didSet {
+            UserDefaults.standard.set(hasCompletedSkinTypeOnboarding, forKey: "hasCompletedSkinTypeOnboarding")
+        }
+    }
+    
     init() {
-        self.name = UserDefaults.standard.string(forKey: "userName") ?? "John Doe"
-        self.skinType = UserDefaults.standard.string(forKey: "userSkinType") ?? "Fair"
+        self.name = UserDefaults.standard.string(forKey: "userName") ?? "User"
         
+        // Load skin type with safe default
+        let savedSkinType = UserDefaults.standard.integer(forKey: "userSkinType")
+        self.skinType = SkinType(rawValue: savedSkinType) ?? .type1 // Most conservative default
+        
+        // Load age range
+        let savedAgeRange = UserDefaults.standard.string(forKey: "userAgeRange") ?? AgeRange.adult.rawValue
+        self.ageRange = AgeRange(rawValue: savedAgeRange) ?? .adult
+        
+        // Load medication status (default to false for safety)
+        self.photosensitiveMedications = UserDefaults.standard.bool(forKey: "userPhotosensitiveMedications")
+        
+        // Load preferred activities
+        let savedActivityStrings = UserDefaults.standard.stringArray(forKey: "userPreferredActivities") ?? []
+        let loadedActivities = savedActivityStrings.compactMap { OutdoorActivity(rawValue: $0) }
+        self.preferredActivities = loadedActivities.isEmpty ? [.walking] : loadedActivities
+        
+        // Load temperature unit
         let savedUnit = UserDefaults.standard.string(forKey: "temperatureUnit") ?? TemperatureUnit.celsius.rawValue
         self.temperatureUnit = TemperatureUnit(rawValue: savedUnit) ?? .celsius
+        
+        // Check if user has completed onboarding
+        self.hasCompletedSkinTypeOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedSkinTypeOnboarding")
+    }
+    
+    /// Create a UserSunProfile from the current user profile
+    func toUserSunProfile() -> UserSunProfile {
+        return UserSunProfile(
+            skinType: skinType,
+            ageRange: ageRange,
+            photosensitiveMedications: photosensitiveMedications,
+            activities: preferredActivities,
+            preferences: SunExposurePreferences(
+                prefersShade: true,
+                usesSunscreen: true,
+                wearsProtectiveClothing: false,
+                flexibleTiming: true,
+                seeksTan: false
+            )
+        )
+    }
+    
+    /// Check if profile is using potentially unsafe default values
+    var isUsingDefaults: Bool {
+        return !hasCompletedSkinTypeOnboarding
+    }
+    
+    /// Get a safety warning if using default profile
+    var safetyWarning: String? {
+        guard isUsingDefaults else { return nil }
+        return "⚠️ Using conservative defaults. Please set your actual skin type in settings for personalized recommendations."
     }
     
     static let shared = UserProfile()
