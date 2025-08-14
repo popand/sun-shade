@@ -1,18 +1,39 @@
 import SwiftUI
 
-/// Memory-safe AI Safety Card with proper lifecycle management and dependency injection
-struct SafeAISafetyCard: View {
+/// Unified Safety Card - Configurable component for safety recommendations
+/// Combines all features from previous implementations with a clean, maintainable architecture
+struct UnifiedSafetyCard: View {
     
     // MARK: - Dependencies
     
     @ObservedObject var viewModel: DashboardViewModel
     @StateObject private var recommendationManager: RecommendationManager
     
+    // MARK: - Configuration
+    
+    enum DisplayMode {
+        case basic       // Traditional static recommendations
+        case smart       // Rule-based intelligent recommendations
+        case ai          // Future AI-powered recommendations (iOS 26+)
+    }
+    
+    private let displayMode: DisplayMode
+    private let showModeToggle: Bool
+    
     // MARK: - Initialization
     
-    init(viewModel: DashboardViewModel, recommendationManager: RecommendationManager? = nil) {
+    init(
+        viewModel: DashboardViewModel,
+        displayMode: DisplayMode = .smart,
+        showModeToggle: Bool = true,
+        recommendationManager: RecommendationManager? = nil
+    ) {
         self.viewModel = viewModel
-        self._recommendationManager = StateObject(wrappedValue: recommendationManager ?? RecommendationManager())
+        self.displayMode = displayMode
+        self.showModeToggle = showModeToggle
+        self._recommendationManager = StateObject(
+            wrappedValue: recommendationManager ?? RecommendationManager()
+        )
     }
     
     // MARK: - Body
@@ -50,9 +71,9 @@ struct SafeAISafetyCard: View {
     
     private var headerSection: some View {
         HStack {
-            Image(systemName: recommendationManager.isIntelligentMode ? "brain.head.profile" : "shield.checkered")
+            Image(systemName: headerIcon)
                 .font(.title2)
-                .foregroundColor(recommendationManager.isIntelligentMode ? AppColors.accent : AppColors.success)
+                .foregroundColor(headerColor)
                 .symbolEffect(.pulse, isActive: recommendationManager.isGenerating)
             
             VStack(alignment: .leading, spacing: 2) {
@@ -61,8 +82,8 @@ struct SafeAISafetyCard: View {
                     .fontWeight(.semibold)
                     .foregroundColor(AppColors.textPrimary)
                 
-                if recommendationManager.isIntelligentMode {
-                    Text("Smart Mode")
+                if displayMode != .basic && recommendationManager.isIntelligentMode {
+                    Text(modeLabel)
                         .font(.caption)
                         .foregroundColor(AppColors.accent)
                 }
@@ -70,16 +91,50 @@ struct SafeAISafetyCard: View {
             
             Spacer()
             
-            intelligenceToggleButton
+            if showModeToggle && displayMode != .basic {
+                modeToggleButton
+            }
         }
     }
     
-    private var intelligenceToggleButton: some View {
+    private var headerIcon: String {
+        switch displayMode {
+        case .basic:
+            return "shield.checkered"
+        case .smart, .ai:
+            return recommendationManager.isIntelligentMode ? "brain.head.profile" : "shield.checkered"
+        }
+    }
+    
+    private var headerColor: Color {
+        switch displayMode {
+        case .basic:
+            return AppColors.success
+        case .smart, .ai:
+            return recommendationManager.isIntelligentMode ? AppColors.accent : AppColors.success
+        }
+    }
+    
+    private var modeLabel: String {
+        switch displayMode {
+        case .basic:
+            return ""
+        case .smart:
+            return "Smart Mode"
+        case .ai:
+            return "AI Mode"
+        }
+    }
+    
+    private var modeToggleButton: some View {
         Button(action: {
-            recommendationManager.toggleIntelligentMode()
+            withAnimation(.easeInOut(duration: 0.3)) {
+                recommendationManager.toggleIntelligentMode()
+            }
         }) {
             Image(systemName: recommendationManager.isIntelligentMode ? "brain.head.profile.fill" : "brain.head.profile")
                 .foregroundColor(AppColors.accent)
+                .scaleEffect(recommendationManager.isIntelligentMode ? 1.1 : 1.0)
         }
         .disabled(recommendationManager.isGenerating)
     }
@@ -97,12 +152,13 @@ struct SafeAISafetyCard: View {
                     Text(viewModel.safeExposureTime)
                         .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundColor(AppColors.success)
+                        .foregroundColor(exposureTimeColor)
                     
-                    if recommendationManager.isIntelligentMode && viewModel.currentUVIndex >= 8 {
+                    if shouldShowWarning {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.caption)
                             .foregroundColor(AppColors.warning)
+                            .transition(.scale.combined(with: .opacity))
                     }
                 }
             }
@@ -111,26 +167,59 @@ struct SafeAISafetyCard: View {
             
             Image(systemName: "clock.fill")
                 .font(.title2)
-                .foregroundColor(AppColors.success)
+                .foregroundColor(exposureTimeColor)
         }
         .padding(16)
-        .background(AppColors.success.opacity(0.1))
+        .background(exposureTimeColor.opacity(0.1))
         .cornerRadius(12)
+    }
+    
+    private var exposureTimeColor: Color {
+        if viewModel.currentUVIndex >= 8 {
+            return AppColors.danger
+        } else if viewModel.currentUVIndex >= 6 {
+            return AppColors.warning
+        } else {
+            return AppColors.success
+        }
+    }
+    
+    private var shouldShowWarning: Bool {
+        return displayMode != .basic && 
+               recommendationManager.isIntelligentMode && 
+               viewModel.currentUVIndex >= 8
     }
     
     // MARK: - Recommendations Section
     
     private var recommendationsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if recommendationManager.isIntelligentMode {
-                ForEach(recommendationManager.recommendations) { recommendation in
-                    IntelligentRecommendationRow(recommendation: recommendation)
-                }
+            if shouldUseIntelligentRecommendations {
+                intelligentRecommendationsList
             } else {
-                ForEach(viewModel.safetyRecommendations, id: \.self) { recommendation in
-                    BasicRecommendationRow(text: recommendation)
-                }
+                basicRecommendationsList
             }
+        }
+    }
+    
+    private var shouldUseIntelligentRecommendations: Bool {
+        return displayMode != .basic && 
+               recommendationManager.isIntelligentMode && 
+               !recommendationManager.recommendations.isEmpty
+    }
+    
+    private var intelligentRecommendationsList: some View {
+        ForEach(recommendationManager.recommendations) { recommendation in
+            UnifiedRecommendationRow(
+                recommendation: recommendation,
+                showPriorityBadge: displayMode == .ai
+            )
+        }
+    }
+    
+    private var basicRecommendationsList: some View {
+        ForEach(viewModel.safetyRecommendations, id: \.self) { recommendation in
+            SimpleRecommendationRow(text: recommendation)
         }
     }
     
@@ -148,13 +237,21 @@ struct SafeAISafetyCard: View {
     // MARK: - Private Methods
     
     private func initializeRecommendations() {
-        // No artificial delays - immediate initialization
+        guard displayMode != .basic else { return }
+        
         if recommendationManager.recommendations.isEmpty {
-            recommendationManager.generateRecommendations()
+            recommendationManager.generateRecommendations(
+                uvIndex: viewModel.currentUVIndex,
+                temperature: viewModel.temperature,
+                cloudCover: viewModel.cloudCover,
+                condition: viewModel.weatherCondition
+            )
         }
     }
     
     private func updateRecommendations() {
+        guard displayMode != .basic else { return }
+        
         recommendationManager.updateConditions(
             uvIndex: viewModel.currentUVIndex,
             temperature: viewModel.temperature,
@@ -164,30 +261,31 @@ struct SafeAISafetyCard: View {
     }
 }
 
-// MARK: - Recommendation Row Components
+// MARK: - Unified Recommendation Row
 
-struct IntelligentRecommendationRow: View {
+struct UnifiedRecommendationRow: View {
     let recommendation: SafetyRecommendation
+    let showPriorityBadge: Bool
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            // Icon with priority indicator
+            // Icon with optional priority indicator
             VStack(spacing: 4) {
                 Image(systemName: recommendation.iconName)
                     .foregroundColor(recommendation.color)
                     .font(.title3)
                 
-                // Priority dot for high-priority items
-                if recommendation.priority == SafetyPriority.critical || recommendation.priority == SafetyPriority.urgent {
+                if shouldShowPriorityDot {
                     Circle()
                         .fill(recommendation.priority.badgeColor)
                         .frame(width: 6, height: 6)
                 }
             }
+            .frame(width: 30)
             
             VStack(alignment: .leading, spacing: 6) {
-                // Priority badge for critical/urgent items
-                if recommendation.priority != SafetyPriority.routine {
+                // Optional priority badge
+                if showPriorityBadge && recommendation.priority != SafetyPriority.routine {
                     Text(recommendation.priority.displayName)
                         .font(.caption2)
                         .fontWeight(.bold)
@@ -205,8 +303,8 @@ struct IntelligentRecommendationRow: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .lineSpacing(2)
                 
-                // Timeframe
-                if !recommendation.timeframe.isEmpty {
+                // Optional timeframe
+                if !recommendation.timeframe.isEmpty && recommendation.timeframe != "General" {
                     HStack {
                         Image(systemName: "clock")
                             .font(.caption2)
@@ -225,9 +323,16 @@ struct IntelligentRecommendationRow: View {
         .background(recommendation.color.opacity(0.08))
         .cornerRadius(10)
     }
+    
+    private var shouldShowPriorityDot: Bool {
+        return recommendation.priority == SafetyPriority.critical || 
+               recommendation.priority == SafetyPriority.urgent
+    }
 }
 
-struct BasicRecommendationRow: View {
+// MARK: - Basic Recommendation Row
+
+private struct SimpleRecommendationRow: View {
     let text: String
     
     var body: some View {
@@ -244,38 +349,31 @@ struct BasicRecommendationRow: View {
     }
 }
 
-// MARK: - Error Handling View
+// MARK: - Preview Provider
 
-struct RecommendationErrorView: View {
-    let error: Error
-    let retryAction: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle")
-                .foregroundColor(.orange)
-                .font(.title2)
+struct UnifiedSafetyCard_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack(spacing: 20) {
+            // Basic mode
+            UnifiedSafetyCard(
+                viewModel: DashboardViewModel(),
+                displayMode: .basic,
+                showModeToggle: false
+            )
             
-            Text("Failed to load recommendations")
-                .font(.subheadline)
-                .foregroundColor(AppColors.textSecondary)
+            // Smart mode
+            UnifiedSafetyCard(
+                viewModel: DashboardViewModel(),
+                displayMode: .smart
+            )
             
-            Button("Retry", action: retryAction)
-                .font(.caption)
-                .foregroundColor(AppColors.accent)
+            // AI mode
+            UnifiedSafetyCard(
+                viewModel: DashboardViewModel(),
+                displayMode: .ai
+            )
         }
-        .padding()
-        .background(Color.orange.opacity(0.1))
-        .cornerRadius(8)
+        .background(AppColors.backgroundPrimary)
+        .previewLayout(.sizeThatFits)
     }
-}
-
-// MARK: - Preview
-
-#Preview {
-    VStack {
-        SafeAISafetyCard(viewModel: DashboardViewModel())
-            .environmentObject(LocationManager())
-    }
-    .background(AppColors.backgroundPrimary)
 }
