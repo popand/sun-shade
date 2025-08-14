@@ -4,9 +4,8 @@ import SwiftUI
 // MARK: - AI Recommendation Data Models
 
 /// Structured data model for AI-generated sun safety recommendations
-/// Uses // @Generable - Will be enabled when Foundation Models framework is available for Foundation Models framework integration when available
-@available(iOS 26.0, *)
-// // @Generable - Will be enabled when Foundation Models framework is available - Will be enabled when Foundation Models framework is available
+/// Will integrate with Foundation Models framework when available
+/// Note: @Generable macro will be added when FoundationModels becomes available
 struct AIRecommendation {
     /// Priority level of the recommendation
     let priority: RecommendationPriority
@@ -31,8 +30,6 @@ struct AIRecommendation {
 }
 
 /// Priority levels for recommendations
-@available(iOS 26.0, *)
-// // @Generable - Will be enabled when Foundation Models framework is available - Will be enabled when Foundation Models framework is available
 enum RecommendationPriority: String, CaseIterable {
     case critical = "critical"      // Immediate danger (UV 10+, extreme conditions)
     case urgent = "urgent"          // High risk (UV 8-9, needs immediate action)
@@ -62,8 +59,6 @@ enum RecommendationPriority: String, CaseIterable {
 }
 
 /// Categories of sun safety recommendations
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 enum RecommendationCategory: String, CaseIterable {
     case timing = "timing"           // When to go outside/avoid sun
     case protection = "protection"   // SPF, clothing, accessories
@@ -102,8 +97,6 @@ enum RecommendationCategory: String, CaseIterable {
 }
 
 /// Color schemes for recommendations
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 enum RecommendationColor: String, CaseIterable {
     case red = "red"         // Critical/urgent
     case orange = "orange"   // Important/warning
@@ -131,8 +124,6 @@ enum RecommendationColor: String, CaseIterable {
 // MARK: - User Context Models
 
 /// User profile information for personalized recommendations
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 struct UserSunProfile {
     /// Skin type (Fitzpatrick scale 1-6)
     let skinType: SkinType
@@ -150,8 +141,6 @@ struct UserSunProfile {
     let preferences: SunExposurePreferences
 }
 
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 enum SkinType: Int, CaseIterable {
     case type1 = 1  // Very fair, always burns, never tans
     case type2 = 2  // Fair, usually burns, tans minimally
@@ -183,8 +172,6 @@ enum SkinType: Int, CaseIterable {
     }
 }
 
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 enum AgeRange: String, CaseIterable {
     case child = "child"           // Under 18
     case youngAdult = "young"      // 18-30
@@ -197,8 +184,6 @@ enum AgeRange: String, CaseIterable {
     }
 }
 
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 enum OutdoorActivity: String, CaseIterable {
     case walking = "walking"
     case running = "running"
@@ -224,8 +209,6 @@ enum OutdoorActivity: String, CaseIterable {
     }
 }
 
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 struct SunExposurePreferences {
     /// Prefers shade when available
     let prefersShade: Bool
@@ -246,8 +229,6 @@ struct SunExposurePreferences {
 // MARK: - Environmental Context
 
 /// Environmental conditions for AI analysis
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 struct EnvironmentalContext {
     /// Current UV index
     let uvIndex: Double
@@ -271,8 +252,6 @@ struct EnvironmentalContext {
     let season: Season
 }
 
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 enum WeatherCondition: String, CaseIterable {
     case clear = "clear"
     case partlyCloudy = "partly_cloudy"
@@ -298,8 +277,6 @@ enum WeatherCondition: String, CaseIterable {
     }
 }
 
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 enum AirQualityLevel: String, CaseIterable {
     case good = "good"
     case moderate = "moderate"
@@ -307,8 +284,6 @@ enum AirQualityLevel: String, CaseIterable {
     case hazardous = "hazardous"
 }
 
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 enum PollenLevel: String, CaseIterable {
     case low = "low"
     case moderate = "moderate"
@@ -316,8 +291,6 @@ enum PollenLevel: String, CaseIterable {
     case veryHigh = "very_high"
 }
 
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 enum TimeOfDay: String, CaseIterable {
     case earlyMorning = "early_morning"  // 5-8 AM
     case morning = "morning"             // 8-11 AM
@@ -339,8 +312,6 @@ enum TimeOfDay: String, CaseIterable {
     }
 }
 
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 enum Season: String, CaseIterable {
     case spring = "spring"
     case summer = "summer"
@@ -357,8 +328,6 @@ enum Season: String, CaseIterable {
     }
 }
 
-@available(iOS 26.0, *)
-// @Generable - Will be enabled when Foundation Models framework is available
 enum UVRiskLevel: String, CaseIterable {
     case low = "low"
     case moderate = "moderate"
@@ -369,7 +338,7 @@ enum UVRiskLevel: String, CaseIterable {
 
 // MARK: - Fallback for older iOS versions
 
-/// Simplified recommendation model for iOS < 26
+/// Simplified recommendation model for backwards compatibility
 struct LegacyRecommendation {
     let priority: String
     let message: String
@@ -382,23 +351,33 @@ struct LegacyRecommendation {
 
 // MARK: - Helper Extensions
 
-@available(iOS 26.0, *)
 extension Array where Element == AIRecommendation {
     /// Sort recommendations by priority
-    @available(iOS 26.0, *)
     var sortedByPriority: [AIRecommendation] {
         return sorted { $0.priority.sortOrder < $1.priority.sortOrder }
     }
     
     /// Get recommendations by category
-    @available(iOS 26.0, *)
     func recommendations(for category: RecommendationCategory) -> [AIRecommendation] {
         return filter { $0.category == category }
     }
     
     /// Get critical and urgent recommendations only
-    @available(iOS 26.0, *)
     var highPriorityRecommendations: [AIRecommendation] {
         return filter { $0.priority == .critical || $0.priority == .urgent }
     }
 }
+
+// MARK: - Foundation Models Integration (Future)
+
+#if canImport(FoundationModels)
+import FoundationModels
+
+extension AIRecommendation {
+    /// Convert to Foundation Models compatible format when available
+    func toFoundationModelFormat() -> Any {
+        // Implementation will be added when FoundationModels is available
+        return self
+    }
+}
+#endif

@@ -1,10 +1,14 @@
 import Foundation
 import SwiftUI
-// Note: FoundationModels import will be available in iOS 26
-// import FoundationModels
 
-/// AI-powered sun safety recommendation service using Apple's Foundation Models
-@available(iOS 26.0, *)
+// MARK: - Foundation Models Integration
+// Note: FoundationModels will be conditionally imported when available
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
+
+/// AI-powered sun safety recommendation service
+/// Currently uses intelligent rule-based system, will integrate Apple's Foundation Models when available
 class AIRecommendationService: ObservableObject {
     
     // MARK: - Properties
@@ -13,7 +17,12 @@ class AIRecommendationService: ObservableObject {
     @Published var lastError: Error?
     @Published var isAvailable = false
     
-    private var foundationModelSession: Any? // FoundationModelSession when available
+    #if canImport(FoundationModels)
+    private var foundationModelSession: FoundationModelSession?
+    #else
+    private var foundationModelSession: Any? // Placeholder for future
+    #endif
+    
     private let fallbackService = FallbackRecommendationService()
     
     // MARK: - Initialization
@@ -114,19 +123,19 @@ class AIRecommendationService: ObservableObject {
     // MARK: - Private Methods
     
     private func checkAvailability() {
-        // In iOS 26, this will check FoundationModel.isAvailable
-        // For now, we'll simulate the check
-        #if targetEnvironment(simulator)
-        isAvailable = false // Simulators may not support Foundation Models
+        // Check if Foundation Models framework is available
+        #if canImport(FoundationModels)
+        // When FoundationModels is available, check if device supports it
+        isAvailable = FoundationModel.isAvailable
         #else
-        // Check device capabilities and iOS version
-        if #available(iOS 26.0, *) {
-            // isAvailable = FoundationModel.isAvailable
-            isAvailable = true // Will be actual check when iOS 26 is available
-        } else {
-            isAvailable = false
-        }
+        // For now, use feature flags to determine availability
+        isAvailable = FeatureFlags.appleIntelligenceEnabled
         #endif
+        
+        // Additional hardware capability checks
+        if isAvailable {
+            isAvailable = FeatureFlags.supportsOnDeviceAI
+        }
         
         print("🤖 AI Recommendation Service - Available: \(isAvailable)")
     }
@@ -144,9 +153,9 @@ class AIRecommendationService: ObservableObject {
             location: location
         )
         
-        // TODO: Replace with actual Foundation Models call when iOS 26 is available
-        /*
-        guard let session = foundationModelSession as? FoundationModelSession else {
+        #if canImport(FoundationModels)
+        // Use Foundation Models when available
+        guard let session = foundationModelSession else {
             throw AIRecommendationError.sessionNotAvailable
         }
         
@@ -156,17 +165,29 @@ class AIRecommendationService: ObservableObject {
         )
         
         return response
-        */
-        
-        // For now, return intelligent rule-based recommendations
-        // This will be replaced with actual AI generation
+        #else
+        // For now, use intelligent rule-based system
         return generateIntelligentFallback(context: context, userProfile: userProfile)
+        #endif
     }
     
     private func generateRecommendationsFromPrompt(_ prompt: String) async -> [AIRecommendation] {
-        // TODO: Implement Foundation Models generation
-        // For now, return fallback recommendations
+        #if canImport(FoundationModels)
+        // Implementation for Foundation Models
+        guard let session = foundationModelSession else {
+            return []
+        }
+        
+        do {
+            return try await session.generate(prompt: prompt, outputType: [AIRecommendation].self)
+        } catch {
+            print("❌ Failed to generate from prompt: \(error)")
+            return []
+        }
+        #else
+        // Return empty for now, will be implemented when framework is available
         return []
+        #endif
     }
     
     private func buildComprehensivePrompt(
@@ -533,10 +554,9 @@ class FallbackRecommendationService {
 
 // MARK: - Backwards Compatibility
 
-@available(iOS 26.0, *)
 extension AIRecommendationService {
     
-    /// Legacy method for iOS < 26 compatibility
+    /// Legacy method for iOS compatibility
     func getLegacyRecommendations(
         uvIndex: Double,
         weather: WeatherData
