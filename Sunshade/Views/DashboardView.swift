@@ -11,7 +11,7 @@ struct DashboardView: View {
                     HeaderSection(viewModel: viewModel, authManager: authManager)
                     UVIndexCard(viewModel: viewModel)
                     WeatherCard(viewModel: viewModel)
-                    SafetyCard(viewModel: viewModel)
+                    UnifiedSafetyCard(viewModel: viewModel)
                     DailyProgressCard(viewModel: viewModel)
                 }
                 .padding(.vertical)
