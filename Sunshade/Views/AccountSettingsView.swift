@@ -2,8 +2,11 @@ import SwiftUI
 
 struct AccountSettingsView: View {
     @ObservedObject private var userProfile = UserProfile.shared
+    @EnvironmentObject var authManager: AuthenticationManager
     @Environment(\.presentationMode) var presentationMode
     @State private var showingSkinTypeOnboarding = false
+    @State private var showingNameEdit = false
+    @State private var editingName = ""
     
     var body: some View {
         NavigationView {
@@ -13,6 +16,56 @@ struct AccountSettingsView: View {
                     if let warning = userProfile.safetyWarning {
                         SafetyWarningBanner(message: warning)
                     }
+                    
+                    // Display Name Section
+                    VStack(spacing: 16) {
+                        HStack {
+                            Image(systemName: "person.circle")
+                                .foregroundColor(AppColors.primary)
+                                .font(.title3)
+                            
+                            Text("Display Name")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(AppColors.textPrimary)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                editingName = authManager.userDisplayName
+                                showingNameEdit = true
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "pencil")
+                                        .font(.caption)
+                                        .foregroundColor(AppColors.primary)
+                                    
+                                    Text("Edit")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(AppColors.primary)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(AppColors.primary.opacity(0.1))
+                                .cornerRadius(8)
+                            }
+                        }
+                        
+                        HStack {
+                            Text(authManager.userDisplayName)
+                                .font(.body)
+                                .foregroundColor(AppColors.textPrimary)
+                            
+                            Spacer()
+                        }
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 4)
+                    }
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(16)
+                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                     
                     // Skin Type Section
                     VStack(spacing: 16) {
@@ -182,8 +235,29 @@ struct AccountSettingsView: View {
                 }
                 .foregroundColor(AppColors.primary)
             )
+            .onAppear {
+                // Check if we need to prompt for name when settings open
+                if authManager.shouldPromptForName {
+                    editingName = ""
+                    showingNameEdit = true
+                }
+            }
             .sheet(isPresented: $showingSkinTypeOnboarding) {
                 SkinTypeOnboardingView()
+            }
+            .sheet(isPresented: $showingNameEdit) {
+                NameInputView(
+                    displayName: $editingName,
+                    isPromptedBySystem: authManager.shouldPromptForName,
+                    onSave: { name in
+                        authManager.updateDisplayName(name)
+                        showingNameEdit = false
+                    },
+                    onCancel: {
+                        editingName = ""
+                        showingNameEdit = false
+                    }
+                )
             }
         }
     }
