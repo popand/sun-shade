@@ -182,8 +182,6 @@ struct AuthenticatedProfileView: View {
     @State private var showingAccountSettings = false
     @State private var showingPrivacySettings = false
     @State private var showingHelpSupport = false
-    @State private var showingNamePrompt = false
-    @State private var newDisplayName = ""
     
     var body: some View {
         NavigationView {
@@ -237,15 +235,6 @@ struct AuthenticatedProfileView: View {
                 // Account Actions
                 VStack(spacing: 12) {
                     ProfileActionRow(
-                        icon: "pencil",
-                        title: "Edit Display Name",
-                        action: { 
-                            newDisplayName = authManager.userDisplayName
-                            showingNamePrompt = true 
-                        }
-                    )
-                    
-                    ProfileActionRow(
                         icon: "gear",
                         title: "Account Settings",
                         action: { showingAccountSettings = true }
@@ -287,27 +276,8 @@ struct AuthenticatedProfileView: View {
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
         }
-        .onAppear {
-            // Check if we need to prompt for name
-            if authManager.shouldPromptForName {
-                showingNamePrompt = true
-                newDisplayName = ""
-            }
-        }
-        .sheet(isPresented: $showingNamePrompt) {
-            NameInputView(
-                displayName: $newDisplayName,
-                isPromptedBySystem: authManager.shouldPromptForName,
-                onSave: { name in
-                    authManager.updateDisplayName(name)
-                    showingNamePrompt = false
-                },
-                onCancel: {
-                    newDisplayName = ""
-                    showingNamePrompt = false
-                }
-            )
-        }
+        // Note: Name editing has been moved to Account Settings
+        // Name editing sheet removed - now handled in Account Settings
         .alert("Sign Out", isPresented: $showingSignOutAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Sign Out", role: .destructive) {
@@ -318,6 +288,7 @@ struct AuthenticatedProfileView: View {
         }
         .sheet(isPresented: $showingAccountSettings) {
             AccountSettingsView()
+                .environmentObject(authManager)
         }
         .sheet(isPresented: $showingPrivacySettings) {
             PrivacyNoticeView()
