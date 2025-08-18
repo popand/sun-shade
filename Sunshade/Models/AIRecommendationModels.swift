@@ -227,7 +227,7 @@ enum OutdoorActivity: String, CaseIterable {
     }
 }
 
-struct SunExposurePreferences {
+struct SunExposurePreferences: Hashable, Equatable {
     /// Prefers shade when available
     let prefersShade: Bool
     

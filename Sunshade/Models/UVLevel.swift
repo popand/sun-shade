@@ -29,6 +29,7 @@ enum UVLevel: Int, CaseIterable {
     
     static func level(for uvIndex: Double) -> UVLevel {
         switch uvIndex {
+        case ..<0: return .low  // Handle negative values safely
         case 0..<3: return .low
         case 3..<6: return .moderate
         case 6..<8: return .high
