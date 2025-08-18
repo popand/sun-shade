@@ -75,6 +75,7 @@ struct WeatherCard: View {
             if isExpanded {
                 VStack(spacing: 0) {
                     Divider()
+                        .background(AppColors.dividerColor)
                         .padding(.horizontal, 20)
                     
                     VStack(spacing: 12) {
@@ -96,9 +97,9 @@ struct WeatherCard: View {
                 ))
             }
         }
-        .background(Color.white)
+        .background(AppColors.cardBackground)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
         .padding(.horizontal, 20)
     }
     

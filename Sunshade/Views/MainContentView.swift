@@ -125,7 +125,7 @@ struct MainContentView: View {
                             Text("Profile")
                         }
                 }
-                .accentColor(AppColors.primary)
+                .accentColor(AppColors.tabBarTint)
             } else {
                 AuthenticationView()
                     .environmentObject(authManager)
@@ -199,7 +199,7 @@ struct AuthenticatedProfileView: View {
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                     }
-                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                    .shadow(color: AppColors.shadowColor, radius: 4, x: 0, y: 2)
                     
                     // User Info
                     VStack(spacing: 4) {
@@ -217,10 +217,10 @@ struct AuthenticatedProfileView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "applelogo")
                                 .font(.caption)
-                                .foregroundColor(.gray)
+                                .foregroundColor(AppColors.textMuted)
                             Text("Signed in with Apple")
                                 .font(.caption)
-                                .foregroundColor(.gray)
+                                .foregroundColor(AppColors.textMuted)
                         }
                         .padding(.top, 4)
                     }
@@ -228,9 +228,9 @@ struct AuthenticatedProfileView: View {
                 .padding(.vertical, 20)
                 .padding(.horizontal, 16)
                 .frame(maxWidth: .infinity)
-                .background(Color.white)
+                .background(AppColors.cardBackground)
                 .cornerRadius(16)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+                .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 4)
                 
                 // Account Actions
                 VStack(spacing: 12) {
@@ -253,6 +253,7 @@ struct AuthenticatedProfileView: View {
                     )
                     
                     Divider()
+                        .background(AppColors.dividerColor)
                         .padding(.vertical, 8)
                     
                     ProfileActionRow(
@@ -265,9 +266,9 @@ struct AuthenticatedProfileView: View {
                 .padding(.vertical, 16)
                 .padding(.horizontal, 16)
                 .frame(maxWidth: .infinity)
-                .background(Color.white)
+                .background(AppColors.cardBackground)
                 .cornerRadius(16)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+                .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 4)
                 
                 Spacer()
             }
