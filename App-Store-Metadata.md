@@ -57,7 +57,7 @@ Not required - all content is original or provided via Apple's WeatherKit under 
 
 ## Screenshots Needed
 - iPhone Screenshots (6.7", 6.5", 5.5" displays)
-- iPad Screenshots (12.9", 11" displays) - if supporting iPad
+- **iPad Screenshots: NOT REQUIRED** (iPhone-only app)
 
 ## App Review Information
 
