@@ -56,9 +56,9 @@ struct UnifiedSafetyCard: View {
             }
         }
         .padding(20)
-        .background(Color.white)
+        .background(AppColors.cardBackground)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
         .padding(.horizontal, 20)
         .onAppear {
             initializeRecommendations()

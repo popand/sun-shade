@@ -63,9 +63,9 @@ struct AccountSettingsView: View {
                         .padding(.horizontal, 4)
                     }
                     .padding()
-                    .background(Color.white)
+                    .background(AppColors.cardBackground)
                     .cornerRadius(16)
-                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                    .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
                     
                     // Skin Type Section
                     VStack(spacing: 16) {
@@ -122,9 +122,9 @@ struct AccountSettingsView: View {
                         }
                     }
                     .padding()
-                    .background(Color.white)
+                    .background(AppColors.cardBackground)
                     .cornerRadius(16)
-                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                    .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
                     
                     // Age Range Section
                     VStack(spacing: 16) {
@@ -154,9 +154,9 @@ struct AccountSettingsView: View {
                         }
                     }
                     .padding()
-                    .background(Color.white)
+                    .background(AppColors.cardBackground)
                     .cornerRadius(16)
-                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                    .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
                     
                     // Medical Information Section
                     VStack(spacing: 16) {
@@ -189,9 +189,9 @@ struct AccountSettingsView: View {
                         }
                     }
                     .padding()
-                    .background(Color.white)
+                    .background(AppColors.cardBackground)
                     .cornerRadius(16)
-                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                    .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
                     
                     // Temperature Unit Section
                     VStack(spacing: 16) {
@@ -221,9 +221,9 @@ struct AccountSettingsView: View {
                         }
                     }
                     .padding()
-                    .background(Color.white)
+                    .background(AppColors.cardBackground)
                     .cornerRadius(16)
-                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                    .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
                 }
             }
             .padding()
