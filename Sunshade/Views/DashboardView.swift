@@ -17,7 +17,7 @@ struct DashboardView: View {
                 .padding(.vertical)
             }
             .background(AppColors.backgroundPrimary)
-            .navigationTitle("Sunshade")
+            .navigationTitle("SunshAid")
             .navigationBarTitleDisplayMode(.large)
             .refreshable {
                 await viewModel.refreshData()

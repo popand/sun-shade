@@ -399,10 +399,10 @@
 				DEVELOPMENT_TEAM = 389Y5DY6GV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Sunshade;
+				INFOPLIST_KEY_CFBundleDisplayName = SunshAid;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Sunshade needs access to your location to provide accurate UV index and weather information for your area.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Sunshade needs access to your location to provide accurate UV index and weather information for your area.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "SunshAid needs access to your location to provide accurate UV index and weather information for your area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SunshAid needs access to your location to provide accurate UV index and weather information for your area.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -431,10 +431,10 @@
 				DEVELOPMENT_TEAM = 389Y5DY6GV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Sunshade;
+				INFOPLIST_KEY_CFBundleDisplayName = SunshAid;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Sunshade needs access to your location to provide accurate UV index and weather information for your area.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Sunshade needs access to your location to provide accurate UV index and weather information for your area.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "SunshAid needs access to your location to provide accurate UV index and weather information for your area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SunshAid needs access to your location to provide accurate UV index and weather information for your area.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

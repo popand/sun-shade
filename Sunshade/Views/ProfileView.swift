@@ -80,7 +80,7 @@ struct ProfileView: View {
                             }
                         }
                         
-                        Text("Sunshade User")
+                        Text("SunshAid User")
                             .font(.subheadline)
                             .foregroundColor(AppColors.textSecondary)
                     }

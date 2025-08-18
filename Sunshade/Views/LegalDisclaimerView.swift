@@ -13,19 +13,19 @@ struct LegalDisclaimerView: View {
                     
                     Group {
                         SectionView(title: "Medical Disclaimer") {
-                            Text("IMPORTANT: Sunshade is not a medical device and should not be used as a substitute for professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider regarding sun exposure recommendations, especially if you have skin conditions or medical concerns.")
+                            Text("IMPORTANT: SunshAid is not a medical device and should not be used as a substitute for professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider regarding sun exposure recommendations, especially if you have skin conditions or medical concerns.")
                         }
                         
                         SectionView(title: "Accuracy of Information") {
-                            Text("While we strive to provide accurate UV index and weather information, Sunshade relies on third-party data sources. We cannot guarantee the accuracy, completeness, or timeliness of this information. Weather conditions can change rapidly and may not be reflected immediately in the app.")
+                            Text("While we strive to provide accurate UV index and weather information, SunshAid relies on third-party data sources. We cannot guarantee the accuracy, completeness, or timeliness of this information. Weather conditions can change rapidly and may not be reflected immediately in the app.")
                         }
                         
                         SectionView(title: "No Warranty") {
-                            Text("Sunshade is provided 'as is' without any warranty of any kind, either express or implied. We do not warrant that the app will be error-free, uninterrupted, or meet your specific requirements.")
+                            Text("SunshAid is provided 'as is' without any warranty of any kind, either express or implied. We do not warrant that the app will be error-free, uninterrupted, or meet your specific requirements.")
                         }
                         
                         SectionView(title: "Limitation of Liability") {
-                            Text("In no event shall the developers of Sunshade be liable for any direct, indirect, incidental, special, or consequential damages resulting from the use or inability to use this application, including but not limited to sunburn, skin damage, or other health issues.")
+                            Text("In no event shall the developers of SunshAid be liable for any direct, indirect, incidental, special, or consequential damages resulting from the use or inability to use this application, including but not limited to sunburn, skin damage, or other health issues.")
                         }
                         
                         SectionView(title: "Personal Responsibility") {
@@ -33,11 +33,11 @@ struct LegalDisclaimerView: View {
                         }
                         
                         SectionView(title: "Third-Party Content") {
-                            Text("Sunshade may include information or links to third-party content. We are not responsible for the accuracy, completeness, or reliability of such content. Any reliance on third-party information is at your own risk.")
+                            Text("SunshAid may include information or links to third-party content. We are not responsible for the accuracy, completeness, or reliability of such content. Any reliance on third-party information is at your own risk.")
                         }
                         
                         SectionView(title: "Emergency Situations") {
-                            Text("Sunshade is not designed for emergency situations. In case of severe sunburn, heat-related illness, or other medical emergencies, seek immediate medical attention. Do not rely on this app for emergency medical guidance.")
+                            Text("SunshAid is not designed for emergency situations. In case of severe sunburn, heat-related illness, or other medical emergencies, seek immediate medical attention. Do not rely on this app for emergency medical guidance.")
                         }
                         
                         SectionView(title: "Geographic Limitations") {
@@ -49,7 +49,7 @@ struct LegalDisclaimerView: View {
                         }
                         
                         SectionView(title: "Indemnification") {
-                            Text("By using Sunshade, you agree to indemnify and hold harmless the developers from any claims, damages, or expenses arising from your use of the app or your violation of these terms.")
+                            Text("By using SunshAid, you agree to indemnify and hold harmless the developers from any claims, damages, or expenses arising from your use of the app or your violation of these terms.")
                         }
                     }
                     

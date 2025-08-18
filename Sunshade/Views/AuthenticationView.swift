@@ -18,7 +18,7 @@ struct AuthenticationView: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 100, height: 100)
                     
-                    Text("Welcome to Sunshade")
+                    Text("Welcome to SunshAid")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(AppColors.textPrimary)

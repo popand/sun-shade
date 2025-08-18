@@ -15,7 +15,7 @@ struct PrivacyNoticeView: View {
                     
                     Group {
                         SectionView(title: "Information We Collect") {
-                            Text("Sunshade may collect the following information:\n• Location data (with your permission) for UV index information\n• Usage patterns and app interactions\n• Device information for optimal app performance\n• Sun exposure session data (stored locally on your device)")
+                            Text("SunshAid may collect the following information:\n• Location data (with your permission) for UV index information\n• Usage patterns and app interactions\n• Device information for optimal app performance\n• Sun exposure session data (stored locally on your device)")
                         }
                         
                         SectionView(title: "How We Use Your Information") {
@@ -31,7 +31,7 @@ struct PrivacyNoticeView: View {
                         }
                         
                         SectionView(title: "Third-Party Services") {
-                            Text("Sunshade uses Apple's WeatherKit to provide UV index information. Weather data is accessed through your Apple Developer account with no additional APIs or third-party services required.")
+                            Text("SunshAid uses Apple's WeatherKit to provide UV index information. Weather data is accessed through your Apple Developer account with no additional APIs or third-party services required.")
                         }
                         
                         SectionView(title: "Data Retention") {
@@ -43,7 +43,7 @@ struct PrivacyNoticeView: View {
                         }
                         
                         SectionView(title: "Children's Privacy") {
-                            Text("Sunshade is not intended for children under 13. We do not knowingly collect personal information from children under 13. If you believe we have collected such information, please contact us immediately.")
+                            Text("SunshAid is not intended for children under 13. We do not knowingly collect personal information from children under 13. If you believe we have collected such information, please contact us immediately.")
                         }
                         
                         SectionView(title: "Changes to This Privacy Notice") {
