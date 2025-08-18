@@ -142,9 +142,9 @@ struct HelpSupportView: View {
         .sheet(isPresented: $showingMailComposer) {
             MailComposeView(
                 recipients: ["sunshadeapp@gmail.com"],
-                subject: "Sunshade App Support",
+                subject: "SunshAid App Support",
                 messageBody: """
-                Hi Sunshade Support Team,
+                Hi SunshAid Support Team,
                 
                 App Version: 1.0.0
                 Device: \(UIDevice.current.model)
