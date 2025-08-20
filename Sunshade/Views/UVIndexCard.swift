@@ -120,6 +120,12 @@ struct UVIndexCard: View {
                     .background(AppColors.warning.opacity(0.1))
                     .cornerRadius(12)
                 }
+                
+                // Apple Weather Attribution
+                HStack {
+                    Spacer()
+                    CompactWeatherAttributionView()
+                }
             }
         }
         .padding(24)

@@ -202,6 +202,15 @@ struct ProfileView: View {
                                 showingLegalDisclaimer = true
                             }
                         )
+                        
+                        Divider()
+                            .background(AppColors.backgroundSecondary)
+                        
+                        LegalMenuItem(
+                            icon: "apple.logo",
+                            title: "Weather Attribution",
+                            url: URL(string: "https://weatherkit.apple.com/legal-attribution.html")
+                        )
                     }
                 }
                 .padding()
@@ -297,30 +306,57 @@ struct StatItem: View {
 struct LegalMenuItem: View {
     let icon: String
     let title: String
-    let action: () -> Void
+    var action: (() -> Void)?
+    var url: URL?
     
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .foregroundColor(AppColors.primary)
-                    .font(.system(size: 18))
-                    .frame(width: 24, height: 24)
-                
-                Text(title)
-                    .font(.body)
-                    .foregroundColor(AppColors.textPrimary)
-                    .multilineTextAlignment(.leading)
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .foregroundColor(AppColors.textMuted)
-                    .font(.system(size: 14))
+        Group {
+            if let url = url {
+                Link(destination: url) {
+                    HStack(spacing: 12) {
+                        Image(systemName: icon)
+                            .foregroundColor(AppColors.primary)
+                            .font(.system(size: 18))
+                            .frame(width: 24, height: 24)
+                        
+                        Text(title)
+                            .font(.body)
+                            .foregroundColor(AppColors.textPrimary)
+                            .multilineTextAlignment(.leading)
+                        
+                        Spacer()
+                        
+                        Image(systemName: "arrow.up.right.square")
+                            .foregroundColor(AppColors.textMuted)
+                            .font(.system(size: 14))
+                    }
+                    .padding(.vertical, 8)
+                    .contentShape(Rectangle())
+                }
+            } else if let action = action {
+                Button(action: action) {
+                    HStack(spacing: 12) {
+                        Image(systemName: icon)
+                            .foregroundColor(AppColors.primary)
+                            .font(.system(size: 18))
+                            .frame(width: 24, height: 24)
+                        
+                        Text(title)
+                            .font(.body)
+                            .foregroundColor(AppColors.textPrimary)
+                            .multilineTextAlignment(.leading)
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(AppColors.textMuted)
+                            .font(.system(size: 14))
+                    }
+                    .padding(.vertical, 8)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PlainButtonStyle())
             }
-            .padding(.vertical, 8)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(PlainButtonStyle())
     }
 }
