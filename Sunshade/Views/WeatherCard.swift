@@ -79,10 +79,16 @@ struct WeatherCard: View {
                         .padding(.horizontal, 20)
                     
                     VStack(spacing: 12) {
-                        Text("5-Day Forecast")
-                            .font(.headline)
-                            .foregroundColor(AppColors.textPrimary)
-                            .padding(.top, 16)
+                        HStack {
+                            Text("5-Day Forecast")
+                                .font(.headline)
+                                .foregroundColor(AppColors.textPrimary)
+                            
+                            Spacer()
+                            
+                            WeatherAttributionView()
+                        }
+                        .padding(.top, 16)
                         
                         ForEach(Array(viewModel.forecast.enumerated()), id: \.offset) { index, day in
                             ForecastRowView(day: day, isToday: index == 0)
