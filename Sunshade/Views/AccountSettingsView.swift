@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AccountSettingsView: View {
     @Environment(\.presentationMode) var presentationMode
-    @StateObject private var userProfile = UserProfile.shared
+    @ObservedObject private var userProfile = UserProfile.shared
     @State private var showingSkinTypeSelection = false
     
     var body: some View {
@@ -440,6 +440,8 @@ struct NameInputSheet: View {
     @Environment(\.presentationMode) var presentationMode
     @FocusState private var isTextFieldFocused: Bool
     
+    private let maxNameLength = 50
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 24) {
@@ -471,9 +473,23 @@ struct NameInputSheet: View {
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .focused($isTextFieldFocused)
                         .submitLabel(.done)
+                        .onChange(of: name) {
+                            // Truncate name if it exceeds maximum length
+                            if name.count > maxNameLength {
+                                name = String(name.prefix(maxNameLength))
+                            }
+                        }
                         .onSubmit {
                             saveAndDismiss()
                         }
+                    
+                    // Character counter
+                    HStack {
+                        Spacer()
+                        Text("\(name.count)/\(maxNameLength)")
+                            .font(.caption)
+                            .foregroundColor(name.count > maxNameLength * 4/5 ? AppColors.primary : AppColors.textMuted)
+                    }
                 }
                 .padding(.horizontal)
                 

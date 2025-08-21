@@ -2,7 +2,7 @@ import SwiftUI
 
 struct MainContentView: View {
     @StateObject private var dashboardViewModel = DashboardViewModel()
-    @StateObject private var userProfile = UserProfile.shared
+    @ObservedObject private var userProfile = UserProfile.shared
     @State private var showDebugOptions = false
     @State private var showingSkinTypeOnboarding = false
     
@@ -51,7 +51,7 @@ struct SimpleProfileView: View {
     @State private var showingPrivacySettings = false
     @State private var showingHelpSupport = false
     @State private var showingAccountSettings = false
-    @StateObject private var userProfile = UserProfile.shared
+    @ObservedObject private var userProfile = UserProfile.shared
     
     var body: some View {
         NavigationView {
