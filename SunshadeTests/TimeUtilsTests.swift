@@ -58,13 +58,16 @@ struct TimeUtilsTests {
         let emptyName = ""
         let greeting = TimeUtils.getPersonalizedGreeting(name: emptyName)
         
-        // Should still return a valid greeting even with empty name
+        // Should return generic greeting when name is empty
         #expect(!greeting.isEmpty)
         #expect(greeting.hasSuffix("!"))
         
-        // Should contain a greeting pattern (might be just "Good Morning, !" etc.)
-        let containsGood = greeting.contains("Good")
-        #expect(containsGood)
+        // Should be one of the generic greetings (no name included)
+        let expectedGreetings = ["Good Morning!", "Good Afternoon!", "Good Evening!", "Good Night!"]
+        #expect(expectedGreetings.contains(greeting))
+        
+        // Should NOT contain a comma (which would indicate personalization)
+        #expect(!greeting.contains(","))
     }
     
     // MARK: - Time Range Tests

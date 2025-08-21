@@ -88,7 +88,7 @@ class UserProfile: ObservableObject {
     }
     
     init() {
-        self.name = UserDefaults.standard.string(forKey: "userName") ?? "User"
+        self.name = UserDefaults.standard.string(forKey: "userName") ?? ""
         
         // Load skin type with safe default
         let savedSkinType = UserDefaults.standard.integer(forKey: "userSkinType")

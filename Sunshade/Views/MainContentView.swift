@@ -50,6 +50,7 @@ struct MainContentView: View {
 struct SimpleProfileView: View {
     @State private var showingPrivacySettings = false
     @State private var showingHelpSupport = false
+    @State private var showingAccountSettings = false
     @StateObject private var userProfile = UserProfile.shared
     
     var body: some View {
@@ -92,12 +93,10 @@ struct SimpleProfileView: View {
                 // Profile Actions
                 VStack(spacing: 12) {
                     ProfileActionRow(
-                        icon: "person.text.rectangle",
-                        title: "Skin Type",
-                        subtitle: userProfile.skinType.description,
-                        action: { 
-                            // Could trigger skin type selection here
-                        }
+                        icon: "gear",
+                        title: "Settings",
+                        subtitle: "Profile, Preferences & More",
+                        action: { showingAccountSettings = true }
                     )
                     
                     ProfileActionRow(
@@ -125,6 +124,9 @@ struct SimpleProfileView: View {
             .background(AppColors.backgroundPrimary)
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
+        }
+        .sheet(isPresented: $showingAccountSettings) {
+            AccountSettingsView()
         }
         .sheet(isPresented: $showingPrivacySettings) {
             PrivacyNoticeView()
