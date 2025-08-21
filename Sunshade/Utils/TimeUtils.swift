@@ -18,6 +18,21 @@ struct TimeUtils {
     
     static func getPersonalizedGreeting(name: String) -> String {
         let hour = Calendar.current.component(.hour, from: Date())
+        
+        // If no name is set, return generic greeting
+        if name.isEmpty {
+            switch hour {
+            case 5..<12:
+                return "Good Morning!"
+            case 12..<17:
+                return "Good Afternoon!"
+            case 17..<21:
+                return "Good Evening!"
+            default:
+                return "Good Night!"
+            }
+        }
+        
         let firstName = name.components(separatedBy: " ").first ?? name
         
         switch hour {

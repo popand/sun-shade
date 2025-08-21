@@ -45,50 +45,67 @@ enum TemperatureUnit: String, CaseIterable {
 class UserProfile: ObservableObject {
     @Published var name: String {
         didSet {
-            UserDefaults.standard.set(name, forKey: "userName")
+            DispatchQueue.main.async {
+                UserDefaults.standard.set(self.name, forKey: "userName")
+            }
         }
     }
     
     @Published var skinType: SkinType {
         didSet {
-            UserDefaults.standard.set(skinType.rawValue, forKey: "userSkinType")
-            hasCompletedSkinTypeOnboarding = true
+            DispatchQueue.main.async {
+                UserDefaults.standard.set(self.skinType.rawValue, forKey: "userSkinType")
+                // Update onboarding flag directly without triggering didSet
+                if !self.hasCompletedSkinTypeOnboarding {
+                    self.hasCompletedSkinTypeOnboarding = true
+                }
+            }
         }
     }
     
     @Published var ageRange: AgeRange {
         didSet {
-            UserDefaults.standard.set(ageRange.rawValue, forKey: "userAgeRange")
+            DispatchQueue.main.async {
+                UserDefaults.standard.set(self.ageRange.rawValue, forKey: "userAgeRange")
+            }
         }
     }
     
     @Published var photosensitiveMedications: Bool {
         didSet {
-            UserDefaults.standard.set(photosensitiveMedications, forKey: "userPhotosensitiveMedications")
+            DispatchQueue.main.async {
+                UserDefaults.standard.set(self.photosensitiveMedications, forKey: "userPhotosensitiveMedications")
+            }
         }
     }
     
     @Published var preferredActivities: [OutdoorActivity] {
         didSet {
-            let activityStrings = preferredActivities.map { $0.rawValue }
-            UserDefaults.standard.set(activityStrings, forKey: "userPreferredActivities")
+            DispatchQueue.main.async {
+                let activityStrings = self.preferredActivities.map { $0.rawValue }
+                UserDefaults.standard.set(activityStrings, forKey: "userPreferredActivities")
+            }
         }
     }
     
     @Published var temperatureUnit: TemperatureUnit {
         didSet {
-            UserDefaults.standard.set(temperatureUnit.rawValue, forKey: "temperatureUnit")
+            DispatchQueue.main.async {
+                UserDefaults.standard.set(self.temperatureUnit.rawValue, forKey: "temperatureUnit")
+            }
         }
     }
     
     @Published var hasCompletedSkinTypeOnboarding: Bool {
         didSet {
-            UserDefaults.standard.set(hasCompletedSkinTypeOnboarding, forKey: "hasCompletedSkinTypeOnboarding")
+            DispatchQueue.main.async {
+                UserDefaults.standard.set(self.hasCompletedSkinTypeOnboarding, forKey: "hasCompletedSkinTypeOnboarding")
+            }
         }
     }
     
     init() {
-        self.name = UserDefaults.standard.string(forKey: "userName") ?? "User"
+        self.name = UserDefaults.standard.string(forKey: "userName") ?? ""
         
         // Load skin type with safe default
         let savedSkinType = UserDefaults.standard.integer(forKey: "userSkinType")

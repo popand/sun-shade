@@ -37,7 +37,7 @@ struct HelpSupportView: View {
                             ContactItem(
                                 icon: "envelope.fill",
                                 title: "Email Support",
-                                subtitle: "sunshadeapp@gmail.com",
+                                subtitle: "sunshaidapp@gmail.com",
                                 action: {
                                     if MFMailComposeViewController.canSendMail() {
                                         showingMailComposer = true
@@ -78,19 +78,8 @@ struct HelpSupportView: View {
                             
                             FAQItem(
                                 question: "Is my data private and secure?",
-                                answer: "Yes, your privacy is our priority. We only collect necessary data to provide our services and never share your personal information with third parties."
+                                answer: "Yes, your privacy is our priority. All your personal data is stored locally on your device and never leaves your device. We don't collect or share any personal information with third parties."
                             )
-                        }
-                    }
-                    
-                    // App Information
-                    VStack(spacing: 16) {
-                        SectionHeader(title: "App Information", icon: "info.circle")
-                        
-                        VStack(spacing: 12) {
-                            InfoItem(title: "Version", value: "1.0.0")
-                            InfoItem(title: "Build", value: "2024.1")
-                            InfoItem(title: "Compatibility", value: "iOS 15.0+")
                         }
                     }
                     
@@ -141,7 +130,7 @@ struct HelpSupportView: View {
         }
         .sheet(isPresented: $showingMailComposer) {
             MailComposeView(
-                recipients: ["sunshadeapp@gmail.com"],
+                recipients: ["sunshaidapp@gmail.com"],
                 subject: "SunshAid App Support",
                 messageBody: """
                 Hi SunshAid Support Team,
@@ -159,7 +148,7 @@ struct HelpSupportView: View {
         .alert("Mail Not Available", isPresented: $showingMailAlert) {
             Button("OK") { }
         } message: {
-            Text("Please configure a mail account in your device settings or contact us directly at sunshadeapp@gmail.com")
+            Text("Please configure a mail account in your device settings or contact us directly at sunshaidapp@gmail.com")
         }
     }
 }

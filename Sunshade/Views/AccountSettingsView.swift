@@ -1,464 +1,542 @@
 import SwiftUI
 
 struct AccountSettingsView: View {
-    @ObservedObject private var userProfile = UserProfile.shared
-    @EnvironmentObject var authManager: AuthenticationManager
     @Environment(\.presentationMode) var presentationMode
-    @State private var showingSkinTypeOnboarding = false
-    @State private var showingNameEdit = false
-    @State private var editingName = ""
+    @ObservedObject private var userProfile = UserProfile.shared
+    @State private var showingSkinTypeSelection = false
     
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 20) {
-                    // Safety Warning Section
-                    if let warning = userProfile.safetyWarning {
-                        SafetyWarningBanner(message: warning)
-                    }
-                    
-                    // Display Name Section
+                VStack(spacing: 24) {
+                    // Header
                     VStack(spacing: 16) {
-                        HStack {
-                            Image(systemName: "person.circle")
-                                .foregroundColor(AppColors.primary)
-                                .font(.title3)
-                            
-                            Text("Display Name")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(AppColors.textPrimary)
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                editingName = authManager.userDisplayName
-                                showingNameEdit = true
-                            }) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "pencil")
-                                        .font(.caption)
-                                        .foregroundColor(AppColors.primary)
-                                    
-                                    Text("Edit")
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                        .foregroundColor(AppColors.primary)
-                                }
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(AppColors.primary.opacity(0.1))
-                                .cornerRadius(8)
-                            }
-                        }
+                        Image(systemName: "gear")
+                            .font(.system(size: 50))
+                            .foregroundColor(AppColors.primary)
                         
-                        HStack {
-                            Text(authManager.userDisplayName)
-                                .font(.body)
-                                .foregroundColor(AppColors.textPrimary)
-                            
-                            Spacer()
-                        }
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 4)
+                        Text("Settings")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(AppColors.textPrimary)
+                        
+                        Text("Customize your app experience and preferences")
+                            .font(.subheadline)
+                            .foregroundColor(AppColors.textSecondary)
+                            .multilineTextAlignment(.center)
                     }
-                    .padding()
-                    .background(AppColors.cardBackground)
-                    .cornerRadius(16)
-                    .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
+                    .padding(.top, 20)
                     
-                    // Skin Type Section
+                    // User Settings Section
                     VStack(spacing: 16) {
-                        HStack {
-                            Image(systemName: "person.crop.circle")
-                                .foregroundColor(AppColors.primary)
-                                .font(.title3)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Skin Type")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(AppColors.textPrimary)
-                                
-                                Text("Fitzpatrick Skin Type Scale")
-                                    .font(.caption)
-                                    .foregroundColor(AppColors.textSecondary)
-                            }
-                            
-                            Spacer()
-                            
-                            if !userProfile.hasCompletedSkinTypeOnboarding {
-                                Button(action: {
-                                    showingSkinTypeOnboarding = true
-                                }) {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "exclamationmark.triangle.fill")
-                                            .foregroundColor(.orange)
-                                            .font(.caption)
-                                        
-                                        Text("Setup")
-                                            .font(.caption2)
-                                            .fontWeight(.medium)
-                                            .foregroundColor(.orange)
-                                    }
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.orange.opacity(0.1))
-                                    .cornerRadius(8)
-                                }
-                            }
-                        }
+                        SettingsSectionHeader(title: "User Settings", icon: "person")
                         
                         VStack(spacing: 12) {
-                            ForEach(SkinType.allCases, id: \.self) { skinType in
-                                SkinTypeRow(
-                                    skinType: skinType,
-                                    isSelected: userProfile.skinType == skinType,
-                                    action: {
-                                        userProfile.skinType = skinType
-                                    }
-                                )
-                            }
+                            NameSettingsItem(userProfile: userProfile)
                         }
                     }
-                    .padding()
-                    .background(AppColors.cardBackground)
-                    .cornerRadius(16)
-                    .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
                     
-                    // Age Range Section
+                    // Profile Settings Section
                     VStack(spacing: 16) {
-                        HStack {
-                            Image(systemName: "person.2")
-                                .foregroundColor(AppColors.primary)
-                                .font(.title3)
-                            
-                            Text("Age Range")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(AppColors.textPrimary)
-                            
-                            Spacer()
-                        }
+                        SettingsSectionHeader(title: "Profile Settings", icon: "person.circle")
                         
                         VStack(spacing: 12) {
-                            ForEach(AgeRange.allCases, id: \.self) { ageRange in
-                                AgeRangeRow(
-                                    ageRange: ageRange,
-                                    isSelected: userProfile.ageRange == ageRange,
-                                    action: {
-                                        userProfile.ageRange = ageRange
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(AppColors.cardBackground)
-                    .cornerRadius(16)
-                    .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
-                    
-                    // Medical Information Section
-                    VStack(spacing: 16) {
-                        HStack {
-                            Image(systemName: "pills")
-                                .foregroundColor(AppColors.primary)
-                                .font(.title3)
-                            
-                            Text("Medical Information")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(AppColors.textPrimary)
-                            
-                            Spacer()
-                        }
-                        
-                        VStack(spacing: 16) {
-                            Toggle(isOn: $userProfile.photosensitiveMedications) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Photosensitive Medications")
-                                        .font(.body)
-                                        .foregroundColor(AppColors.textPrimary)
-                                    
-                                    Text("Taking medications that increase sun sensitivity")
-                                        .font(.caption)
-                                        .foregroundColor(AppColors.textSecondary)
+                            SettingsItem(
+                                icon: "person.text.rectangle",
+                                title: "Skin Type",
+                                subtitle: userProfile.skinType.description,
+                                action: {
+                                    showingSkinTypeSelection = true
                                 }
-                            }
-                            .tint(AppColors.primary)
+                            )
+                            
+                            SettingsItem(
+                                icon: "calendar",
+                                title: "Age Range",
+                                subtitle: ageRangeText,
+                                showPicker: true,
+                                picker: AnyView(
+                                    Picker("Age Range", selection: $userProfile.ageRange) {
+                                        Text("Under 18").tag(AgeRange.child)
+                                        Text("18-30").tag(AgeRange.youngAdult)
+                                        Text("31-50").tag(AgeRange.adult)
+                                        Text("51-65").tag(AgeRange.middleAge)
+                                        Text("65+").tag(AgeRange.senior)
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .accentColor(AppColors.primary)
+                                )
+                            )
                         }
                     }
-                    .padding()
-                    .background(AppColors.cardBackground)
-                    .cornerRadius(16)
-                    .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
                     
-                    // Temperature Unit Section
+                    // Preferences Section
                     VStack(spacing: 16) {
-                        HStack {
-                            Image(systemName: "thermometer")
-                                .foregroundColor(AppColors.primary)
-                                .font(.title3)
-                            
-                            Text("Temperature Unit")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(AppColors.textPrimary)
-                            
-                            Spacer()
-                        }
+                        SettingsSectionHeader(title: "Preferences", icon: "slider.horizontal.3")
                         
                         VStack(spacing: 12) {
-                            ForEach(TemperatureUnit.allCases, id: \.self) { unit in
-                                TemperatureUnitRow(
-                                    unit: unit,
-                                    isSelected: userProfile.temperatureUnit == unit,
-                                    action: {
-                                        userProfile.temperatureUnit = unit
+                            SettingsItem(
+                                icon: "thermometer",
+                                title: "Temperature Unit",
+                                subtitle: userProfile.temperatureUnit.displayName,
+                                showPicker: true,
+                                picker: AnyView(
+                                    Picker("Temperature", selection: $userProfile.temperatureUnit) {
+                                        Text("°F").tag(TemperatureUnit.fahrenheit)
+                                        Text("°C").tag(TemperatureUnit.celsius)
                                     }
+                                    .pickerStyle(SegmentedPickerStyle())
+                                    .frame(width: 100)
                                 )
-                            }
+                            )
                         }
                     }
-                    .padding()
-                    .background(AppColors.cardBackground)
-                    .cornerRadius(16)
-                    .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
+                    
+                    // App Information Section
+                    VStack(spacing: 16) {
+                        SettingsSectionHeader(title: "App Information", icon: "info.circle")
+                        
+                        VStack(spacing: 12) {
+                            SettingsInfoItem(
+                                title: "Version", 
+                                value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+                            )
+                            SettingsInfoItem(
+                                title: "Build", 
+                                value: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+                            )
+                            SettingsInfoItem(
+                                title: "Compatibility",
+                                value: "iOS 16.0+"
+                            )
+                        }
+                    }
+                    
+                    Spacer(minLength: 100)
                 }
+                .padding()
             }
-            .padding()
             .background(AppColors.backgroundPrimary)
-            .navigationTitle("Account Settings")
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
                 leading: Button("Done") {
                     presentationMode.wrappedValue.dismiss()
                 }
                 .foregroundColor(AppColors.primary)
             )
-            .onAppear {
-                // Check if we need to prompt for name when settings open
-                if authManager.shouldPromptForName {
-                    editingName = ""
-                    showingNameEdit = true
-                }
-            }
-            .sheet(isPresented: $showingSkinTypeOnboarding) {
-                SkinTypeOnboardingView()
-            }
-            .sheet(isPresented: $showingNameEdit) {
-                NameInputView(
-                    displayName: $editingName,
-                    isPromptedBySystem: authManager.shouldPromptForName,
-                    onSave: { name in
-                        authManager.updateDisplayName(name)
-                        showingNameEdit = false
-                    },
-                    onCancel: {
-                        editingName = ""
-                        showingNameEdit = false
-                    }
-                )
-            }
+        }
+        .sheet(isPresented: $showingSkinTypeSelection) {
+            SkinTypeSelectionView(selectedSkinType: $userProfile.skinType)
         }
     }
+    
+    private var ageRangeText: String {
+        switch userProfile.ageRange {
+        case .child: return "Under 18"
+        case .youngAdult: return "18-30"
+        case .adult: return "31-50"
+        case .middleAge: return "51-65"
+        case .senior: return "65+"
+        }
+    }
+    
 }
 
-struct TemperatureUnitRow: View {
-    let unit: TemperatureUnit
-    let isSelected: Bool
-    let action: () -> Void
+// Settings Item Component (similar to ContactItem in HelpSupportView)
+struct SettingsItem: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let showPicker: Bool
+    let picker: AnyView?
+    let action: (() -> Void)?
+    
+    init(icon: String, title: String, subtitle: String, showPicker: Bool = false, picker: AnyView? = nil, action: (() -> Void)? = nil) {
+        self.icon = icon
+        self.title = title
+        self.subtitle = subtitle
+        self.showPicker = showPicker
+        self.picker = picker
+        self.action = action
+    }
     
     var body: some View {
-        Button(action: action) {
+        Button(action: action ?? {}) {
             HStack(spacing: 12) {
-                Image(systemName: unit == .celsius ? "c.circle" : "f.circle")
-                    .foregroundColor(AppColors.primary)
-                    .font(.system(size: 18))
-                    .frame(width: 24, height: 24)
-                
-                Text(unit.displayName)
-                    .font(.body)
-                    .foregroundColor(AppColors.textPrimary)
-                    .multilineTextAlignment(.leading)
-                
-                Spacer()
-                
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(AppColors.primary)
-                        .font(.system(size: 16, weight: .semibold))
-                }
-            }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 4)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-// MARK: - Safety Warning Banner
-
-struct SafetyWarningBanner: View {
-    let message: String
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundColor(.orange)
-                .font(.title3)
-            
-            Text(message)
-                .font(.subheadline)
-                .foregroundColor(AppColors.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-            
-            Spacer()
-        }
-        .padding(16)
-        .background(Color.orange.opacity(0.1))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-        )
-    }
-}
-
-// MARK: - Skin Type Row
-
-struct SkinTypeRow: View {
-    let skinType: SkinType
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 12) {
-                    Circle()
-                        .fill(skinTypeColor)
-                        .frame(width: 20, height: 20)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack {
-                            Text("Type \(skinType.rawValue)")
-                                .font(.body)
-                                .fontWeight(.medium)
-                                .foregroundColor(AppColors.textPrimary)
-                            
-                            Text(skinType.description)
-                                .font(.body)
-                                .foregroundColor(AppColors.textSecondary)
-                        }
-                        
-                        Text(skinTypeDescription)
-                            .font(.caption)
-                            .foregroundColor(AppColors.textMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    
-                    Spacer()
-                    
-                    if isSelected {
-                        Image(systemName: "checkmark")
-                            .foregroundColor(AppColors.primary)
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                }
-            }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 4)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-    
-    private var skinTypeColor: Color {
-        switch skinType {
-        case .type1: return Color(red: 0.98, green: 0.89, blue: 0.80)
-        case .type2: return Color(red: 0.96, green: 0.82, blue: 0.69)
-        case .type3: return Color(red: 0.87, green: 0.72, blue: 0.53)
-        case .type4: return Color(red: 0.76, green: 0.60, blue: 0.42)
-        case .type5: return Color(red: 0.55, green: 0.42, blue: 0.29)
-        case .type6: return Color(red: 0.35, green: 0.25, blue: 0.18)
-        }
-    }
-    
-    private var skinTypeDescription: String {
-        switch skinType {
-        case .type1: return "Always burns, never tans. Red/blonde hair, blue eyes."
-        case .type2: return "Usually burns, tans minimally. Fair skin, light eyes."
-        case .type3: return "Sometimes burns, tans gradually. Medium skin tone."
-        case .type4: return "Rarely burns, tans easily. Olive skin, dark hair."
-        case .type5: return "Very rarely burns, tans darkly. Brown skin."
-        case .type6: return "Never burns, tans very darkly. Black skin."
-        }
-    }
-}
-
-// MARK: - Age Range Row
-
-struct AgeRangeRow: View {
-    let ageRange: AgeRange
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: ageRangeIcon)
+                Image(systemName: icon)
                     .foregroundColor(AppColors.primary)
                     .font(.system(size: 18))
                     .frame(width: 24, height: 24)
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(ageRangeDisplayName)
+                    Text(title)
                         .font(.body)
+                        .fontWeight(.medium)
                         .foregroundColor(AppColors.textPrimary)
                     
-                    if ageRange.needsExtraProtection {
-                        Text("Requires extra sun protection")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                    }
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(AppColors.textSecondary)
+                }
+                
+                Spacer()
+                
+                if showPicker, let picker = picker {
+                    picker
+                } else if action != nil {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(AppColors.textMuted)
+                        .font(.system(size: 14))
+                }
+            }
+            .padding()
+            .background(Color.white)
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .disabled(action == nil && !showPicker)
+    }
+}
+
+// Settings Info Item Component 
+struct SettingsInfoItem: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.body)
+                .foregroundColor(AppColors.textPrimary)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.body)
+                .fontWeight(.medium)
+                .foregroundColor(AppColors.textSecondary)
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+    }
+}
+
+// Settings Section Header Component
+struct SettingsSectionHeader: View {
+    let title: String
+    let icon: String
+    
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(AppColors.primary)
+                .font(.title3)
+            
+            Text(title)
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(AppColors.textPrimary)
+            
+            Spacer()
+        }
+    }
+}
+
+// Skin Type Selection View (keeping existing implementation)
+struct SkinTypeSelectionView: View {
+    @Binding var selectedSkinType: SkinType
+    @Environment(\.presentationMode) var presentationMode
+    @State private var tempSelection: SkinType
+    
+    init(selectedSkinType: Binding<SkinType>) {
+        self._selectedSkinType = selectedSkinType
+        self._tempSelection = State(initialValue: selectedSkinType.wrappedValue)
+    }
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("Skin Type")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(AppColors.textPrimary)
+                        .padding(.bottom, 10)
+                    
+                    headerSection
+                    skinTypeOptions
+                }
+                .padding()
+            }
+            .background(AppColors.backgroundPrimary)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarItems(
+                leading: Button("Done") {
+                    selectedSkinType = tempSelection
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .foregroundColor(AppColors.primary)
+            )
+        }
+    }
+    
+    private var headerSection: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "sun.max.fill")
+                .font(.system(size: 50))
+                .foregroundColor(AppColors.primary)
+            
+            Text("Select Your Skin Type")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(AppColors.textPrimary)
+            
+            Text("This helps us provide personalized UV safety recommendations")
+                .font(.subheadline)
+                .foregroundColor(AppColors.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+    }
+    
+    private var skinTypeOptions: some View {
+        VStack(spacing: 12) {
+            SkinTypeCard(type: .type1, description: "Very Fair", details: "Always burns, never tans", isSelected: tempSelection == .type1) {
+                tempSelection = .type1
+            }
+            SkinTypeCard(type: .type2, description: "Fair", details: "Usually burns, tans minimally", isSelected: tempSelection == .type2) {
+                tempSelection = .type2
+            }
+            SkinTypeCard(type: .type3, description: "Medium", details: "Sometimes burns, tans gradually", isSelected: tempSelection == .type3) {
+                tempSelection = .type3
+            }
+            SkinTypeCard(type: .type4, description: "Olive", details: "Rarely burns, tans easily", isSelected: tempSelection == .type4) {
+                tempSelection = .type4
+            }
+            SkinTypeCard(type: .type5, description: "Brown", details: "Very rarely burns, tans darkly", isSelected: tempSelection == .type5) {
+                tempSelection = .type5
+            }
+            SkinTypeCard(type: .type6, description: "Black", details: "Never burns, always tans", isSelected: tempSelection == .type6) {
+                tempSelection = .type6
+            }
+        }
+    }
+}
+
+struct SkinTypeCard: View {
+    let type: SkinType
+    let description: String
+    let details: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? AppColors.primary : AppColors.backgroundSecondary)
+                        .frame(width: 40, height: 40)
+                    
+                    Text("\(type.rawValue)")
+                        .font(.headline)
+                        .foregroundColor(isSelected ? .white : AppColors.textPrimary)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(description)
+                        .font(.headline)
+                        .foregroundColor(AppColors.textPrimary)
+                    
+                    Text(details)
+                        .font(.caption)
+                        .foregroundColor(AppColors.textSecondary)
                 }
                 
                 Spacer()
                 
                 if isSelected {
-                    Image(systemName: "checkmark")
+                    Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(AppColors.primary)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.title3)
                 }
             }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 4)
-            .contentShape(Rectangle())
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? AppColors.primary.opacity(0.1) : AppColors.cardBackground)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? AppColors.primary : Color.clear, lineWidth: 2)
+            )
         }
         .buttonStyle(PlainButtonStyle())
     }
+}
+
+// Name Settings Item Component
+struct NameSettingsItem: View {
+    @ObservedObject var userProfile: UserProfile
+    @State private var showingNameInput = false
+    @State private var tempName = ""
     
-    private var ageRangeDisplayName: String {
-        switch ageRange {
-        case .child: return "Child (Under 18)"
-        case .youngAdult: return "Young Adult (18-30)"
-        case .adult: return "Adult (31-50)"
-        case .middleAge: return "Middle Age (51-65)"
-        case .senior: return "Senior (65+)"
+    var body: some View {
+        Button(action: {
+            tempName = userProfile.name
+            showingNameInput = true
+        }) {
+            HStack(spacing: 12) {
+                Image(systemName: "person.crop.circle")
+                    .foregroundColor(AppColors.primary)
+                    .font(.system(size: 18))
+                    .frame(width: 24, height: 24)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Display Name")
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundColor(AppColors.textPrimary)
+                    
+                    Text(userProfile.name.isEmpty ? "Not set" : userProfile.name)
+                        .font(.caption)
+                        .foregroundColor(userProfile.name.isEmpty ? AppColors.textMuted : AppColors.textSecondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .foregroundColor(AppColors.textMuted)
+                    .font(.system(size: 14))
+            }
+            .padding()
+            .background(Color.white)
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
         }
-    }
-    
-    private var ageRangeIcon: String {
-        switch ageRange {
-        case .child: return "person.crop.circle"
-        case .youngAdult: return "person.crop.circle.fill"
-        case .adult: return "person.crop.square"
-        case .middleAge: return "person.crop.square.fill"
-        case .senior: return "person.crop.artframe"
+        .buttonStyle(PlainButtonStyle())
+        .sheet(isPresented: $showingNameInput) {
+            NameInputSheet(
+                name: $tempName,
+                onSave: { name in
+                    userProfile.name = name
+                },
+                onCancel: {
+                    tempName = userProfile.name
+                }
+            )
         }
     }
 }
+
+// Name Input Sheet
+struct NameInputSheet: View {
+    @Binding var name: String
+    let onSave: (String) -> Void
+    let onCancel: () -> Void
+    @Environment(\.presentationMode) var presentationMode
+    @FocusState private var isTextFieldFocused: Bool
+    
+    private let maxNameLength = 50
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 24) {
+                // Header
+                VStack(spacing: 16) {
+                    Image(systemName: "person.crop.circle.fill")
+                        .font(.system(size: 50))
+                        .foregroundColor(AppColors.primary)
+                    
+                    Text("Set Your Name")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(AppColors.textPrimary)
+                    
+                    Text("This will be used in personalized greetings throughout the app")
+                        .font(.subheadline)
+                        .foregroundColor(AppColors.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top, 20)
+                
+                // Input Section
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Display Name")
+                        .font(.headline)
+                        .foregroundColor(AppColors.textPrimary)
+                    
+                    TextField("Enter your name (optional)", text: $name)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .focused($isTextFieldFocused)
+                        .submitLabel(.done)
+                        .onChange(of: name) {
+                            // Truncate name if it exceeds maximum length
+                            if name.count > maxNameLength {
+                                name = String(name.prefix(maxNameLength))
+                            }
+                        }
+                        .onSubmit {
+                            saveAndDismiss()
+                        }
+                    
+                    // Character counter
+                    HStack {
+                        Spacer()
+                        Text("\(name.count)/\(maxNameLength)")
+                            .font(.caption)
+                            .foregroundColor(name.count > maxNameLength * 4/5 ? AppColors.primary : AppColors.textMuted)
+                    }
+                }
+                .padding(.horizontal)
+                
+                Spacer()
+                
+                // Action Buttons
+                VStack(spacing: 12) {
+                    Button(action: saveAndDismiss) {
+                        Text("Save")
+                            .font(.body)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(AppColors.primary)
+                            .cornerRadius(12)
+                    }
+                    
+                    Button(action: {
+                        onCancel()
+                        presentationMode.wrappedValue.dismiss()
+                    }) {
+                        Text("Cancel")
+                            .font(.body)
+                            .foregroundColor(AppColors.textSecondary)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 20)
+            }
+            .background(AppColors.backgroundPrimary)
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
+        }
+        .onAppear {
+            isTextFieldFocused = true
+        }
+    }
+    
+    private func saveAndDismiss() {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        onSave(trimmedName)
+        presentationMode.wrappedValue.dismiss()
+    }
+}
+
 
 #Preview {
     AccountSettingsView()
