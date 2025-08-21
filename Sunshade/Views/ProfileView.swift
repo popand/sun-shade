@@ -8,7 +8,6 @@ struct ProfileView: View {
     @State private var showingLicenseTerms = false
     @State private var showingPrivacyNotice = false
     @State private var showingLegalDisclaimer = false
-    @State private var showingAccountSettings = false
     @State private var showingHelpSupport = false
     
     // Computed properties for weekly statistics
@@ -147,7 +146,7 @@ struct ProfileView: View {
                             icon: "thermometer",
                             title: "Temperature Unit",
                             action: {
-                                showingAccountSettings = true
+                                // Account settings removed
                             }
                         )
                     }
@@ -272,9 +271,6 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showingLegalDisclaimer) {
                 LegalDisclaimerView()
-            }
-            .sheet(isPresented: $showingAccountSettings) {
-                AccountSettingsView()
             }
             .sheet(isPresented: $showingHelpSupport) {
                 HelpSupportView()

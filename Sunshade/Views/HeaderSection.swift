@@ -2,7 +2,6 @@ import SwiftUI
 
 struct HeaderSection: View {
     @ObservedObject var viewModel: DashboardViewModel
-    let authManager: AuthenticationManager
     
     var body: some View {
         HStack {

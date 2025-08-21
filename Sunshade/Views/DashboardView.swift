@@ -2,13 +2,12 @@ import SwiftUI
 
 struct DashboardView: View {
     @ObservedObject var viewModel: DashboardViewModel
-    @EnvironmentObject var authManager: AuthenticationManager
     
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
-                    HeaderSection(viewModel: viewModel, authManager: authManager)
+                    HeaderSection(viewModel: viewModel)
                     UVIndexCard(viewModel: viewModel)
                     WeatherCard(viewModel: viewModel)
                     UnifiedSafetyCard(viewModel: viewModel)

@@ -1,164 +1,35 @@
 import SwiftUI
 
-struct NameInputView: View {
-    @Binding var displayName: String
-    let isPromptedBySystem: Bool
-    let onSave: (String) -> Void
-    let onCancel: () -> Void
-    
-    @State private var localName = ""
-    @FocusState private var isTextFieldFocused: Bool
-    
-    var body: some View {
-        NavigationView {
-            VStack(spacing: 24) {
-                // Header
-                VStack(spacing: 16) {
-                    Image(systemName: "person.circle.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(AppColors.primary)
-                    
-                    VStack(spacing: 8) {
-                        Text("Set Your Name")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(AppColors.textPrimary)
-                        
-                        Text(isPromptedBySystem ? 
-                             "We couldn't get your name from Apple. Please enter how you'd like to be addressed in the app." :
-                             "Enter how you'd like to be addressed in the app.")
-                            .font(.body)
-                            .foregroundColor(AppColors.textSecondary)
-                            .multilineTextAlignment(.center)
-                    }
-                }
-                .padding(.top, 20)
-                
-                // Text Input
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Display Name")
-                        .font(.headline)
-                        .foregroundColor(AppColors.textPrimary)
-                    
-                    TextField("Enter your name", text: $localName)
-                        .textFieldStyle(.roundedBorder)
-                        .focused($isTextFieldFocused)
-                        .submitLabel(.done)
-                        .onSubmit {
-                            saveIfValid()
-                        }
-                }
-                
-                Spacer()
-                
-                // Action buttons
-                VStack(spacing: 12) {
-                    Button(action: saveIfValid) {
-                        Text("Save")
-                            .font(.body)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(
-                                localName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 
-                                Color.gray : AppColors.primary
-                            )
-                            .cornerRadius(12)
-                    }
-                    .disabled(localName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    
-                    Button(action: onCancel) {
-                        Text("Cancel")
-                            .font(.body)
-                            .foregroundColor(AppColors.textSecondary)
-                    }
-                }
-                .padding(.bottom, 20)
-            }
-            .padding()
-            .navigationTitle("")
-            .navigationBarHidden(true)
-        }
-        .onAppear {
-            localName = displayName
-            isTextFieldFocused = true
-        }
-    }
-    
-    private func saveIfValid() {
-        let trimmedName = localName.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedName.isEmpty {
-            onSave(trimmedName)
-        }
-    }
-}
-
 struct MainContentView: View {
-    @StateObject private var authManager = AuthenticationManager()
     @StateObject private var dashboardViewModel = DashboardViewModel()
     @StateObject private var userProfile = UserProfile.shared
     @State private var showDebugOptions = false
     @State private var showingSkinTypeOnboarding = false
     
     var body: some View {
-        Group {
-            if authManager.isAuthenticated {
-                TabView {
-                    DashboardView(viewModel: dashboardViewModel)
-                        .environmentObject(authManager)
-                        .tabItem {
-                            Image(systemName: "sun.max.fill")
-                            Text("Dashboard")
-                        }
-                    
-                    SafetyTimerView(dashboardViewModel: dashboardViewModel)
-                        .tabItem {
-                            Image(systemName: "timer")
-                            Text("Timer")
-                        }
-                    
-                    AuthenticatedProfileView()
-                        .environmentObject(authManager)
-                        .tabItem {
-                            Image(systemName: "person.circle")
-                            Text("Profile")
-                        }
+        TabView {
+            DashboardView(viewModel: dashboardViewModel)
+                .tabItem {
+                    Image(systemName: "sun.max.fill")
+                    Text("Dashboard")
                 }
-                .accentColor(AppColors.tabBarTint)
-            } else {
-                AuthenticationView()
-                    .environmentObject(authManager)
-            }
-        }
-        .onAppear {
-            authManager.checkAuthenticationStatus()
             
-            // Initialize greeting with authenticated user if already signed in
-            if authManager.isAuthenticated {
-                dashboardViewModel.updateGreetingForUser(authManager.userDisplayName)
-                
-                // Check if we need to show skin type onboarding
-                checkForSkinTypeOnboarding()
-            }
+            SafetyTimerView(dashboardViewModel: dashboardViewModel)
+                .tabItem {
+                    Image(systemName: "timer")
+                    Text("Timer")
+                }
+            
+            SimpleProfileView()
+                .tabItem {
+                    Image(systemName: "person.circle")
+                    Text("Profile")
+                }
         }
-        .onChange(of: authManager.isAuthenticated) { isAuthenticated in
-            if isAuthenticated {
-                // Update greeting when user becomes authenticated
-                dashboardViewModel.updateGreetingForUser(authManager.userDisplayName)
-                
-                // Check for skin type onboarding when user signs in
-                checkForSkinTypeOnboarding()
-            } else {
-                // Clear authenticated user data when user signs out
-                dashboardViewModel.clearAuthenticatedUser()
-            }
-        }
-        .onChange(of: authManager.currentUser?.displayName) { displayName in
-            if let displayName = displayName, authManager.isAuthenticated {
-                // Update greeting when user changes their display name
-                dashboardViewModel.updateGreetingForUser(displayName)
-            }
+        .accentColor(AppColors.tabBarTint)
+        .onAppear {
+            // Check if we need to show skin type onboarding
+            checkForSkinTypeOnboarding()
         }
         .sheet(isPresented: $showingSkinTypeOnboarding) {
             SkinTypeOnboardingView()
@@ -176,12 +47,10 @@ struct MainContentView: View {
     }
 }
 
-struct AuthenticatedProfileView: View {
-    @EnvironmentObject var authManager: AuthenticationManager
-    @State private var showingSignOutAlert = false
-    @State private var showingAccountSettings = false
+struct SimpleProfileView: View {
     @State private var showingPrivacySettings = false
     @State private var showingHelpSupport = false
+    @StateObject private var userProfile = UserProfile.shared
     
     var body: some View {
         NavigationView {
@@ -194,35 +63,23 @@ struct AuthenticatedProfileView: View {
                             .fill(AppColors.primary)
                             .frame(width: 80, height: 80)
                         
-                        Text(authManager.userInitials)
-                            .font(.title)
-                            .fontWeight(.bold)
+                        Image(systemName: "person.fill")
+                            .font(.largeTitle)
                             .foregroundColor(.white)
                     }
                     .shadow(color: AppColors.shadowColor, radius: 4, x: 0, y: 2)
                     
                     // User Info
                     VStack(spacing: 4) {
-                        Text(authManager.userDisplayName)
+                        Text("User Profile")
                             .font(.title2)
                             .fontWeight(.semibold)
                             .foregroundColor(AppColors.textPrimary)
                         
-                        if !authManager.userEmail.isEmpty {
-                            Text(authManager.userEmail)
-                                .font(.subheadline)
-                                .foregroundColor(AppColors.textSecondary)
-                        }
-                        
-                        HStack(spacing: 4) {
-                            Image(systemName: "applelogo")
-                                .font(.caption)
-                                .foregroundColor(AppColors.textMuted)
-                            Text("Signed in with Apple")
-                                .font(.caption)
-                                .foregroundColor(AppColors.textMuted)
-                        }
-                        .padding(.top, 4)
+                        Text("Local Storage Only")
+                            .font(.caption)
+                            .foregroundColor(AppColors.textMuted)
+                            .padding(.top, 4)
                     }
                 }
                 .padding(.vertical, 20)
@@ -232,12 +89,15 @@ struct AuthenticatedProfileView: View {
                 .cornerRadius(16)
                 .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 4)
                 
-                // Account Actions
+                // Profile Actions
                 VStack(spacing: 12) {
                     ProfileActionRow(
-                        icon: "gear",
-                        title: "Account Settings",
-                        action: { showingAccountSettings = true }
+                        icon: "person.text.rectangle",
+                        title: "Skin Type",
+                        subtitle: userProfile.skinType.description,
+                        action: { 
+                            // Could trigger skin type selection here
+                        }
                     )
                     
                     ProfileActionRow(
@@ -250,17 +110,6 @@ struct AuthenticatedProfileView: View {
                         icon: "questionmark.circle",
                         title: "Help & Support",
                         action: { showingHelpSupport = true }
-                    )
-                    
-                    Divider()
-                        .background(AppColors.dividerColor)
-                        .padding(.vertical, 8)
-                    
-                    ProfileActionRow(
-                        icon: "rectangle.portrait.and.arrow.right",
-                        title: "Sign Out",
-                        titleColor: AppColors.danger,
-                        action: { showingSignOutAlert = true }
                     )
                 }
                 .padding(.vertical, 16)
@@ -277,20 +126,6 @@ struct AuthenticatedProfileView: View {
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
         }
-        // Note: Name editing has been moved to Account Settings
-        // Name editing sheet removed - now handled in Account Settings
-        .alert("Sign Out", isPresented: $showingSignOutAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Sign Out", role: .destructive) {
-                authManager.signOut()
-            }
-        } message: {
-            Text("Are you sure you want to sign out?")
-        }
-        .sheet(isPresented: $showingAccountSettings) {
-            AccountSettingsView()
-                .environmentObject(authManager)
-        }
         .sheet(isPresented: $showingPrivacySettings) {
             PrivacyNoticeView()
         }
@@ -303,6 +138,7 @@ struct AuthenticatedProfileView: View {
 struct ProfileActionRow: View {
     let icon: String
     let title: String
+    var subtitle: String? = nil
     var titleColor: Color = AppColors.textPrimary
     let action: () -> Void
     
@@ -314,9 +150,17 @@ struct ProfileActionRow: View {
                     .foregroundColor(AppColors.primary)
                     .frame(width: 24)
                 
-                Text(title)
-                    .font(.body)
-                    .foregroundColor(titleColor)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.body)
+                        .foregroundColor(titleColor)
+                    
+                    if let subtitle = subtitle {
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundColor(AppColors.textSecondary)
+                    }
+                }
                 
                 Spacer()
                 
