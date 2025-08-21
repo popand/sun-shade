@@ -104,3 +104,6 @@ CLAUDE.md
 .cursor/
 .superdesign/
 .windsurfrules
+
+# Claude agents configuration
+.claude/agents/
