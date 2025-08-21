@@ -4,7 +4,6 @@ struct AccountSettingsView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var userProfile = UserProfile.shared
     @State private var showingSkinTypeSelection = false
-    @State private var selectedTemperatureUnit: SettingsTemperatureUnit = .fahrenheit
     
     var body: some View {
         NavigationView {
@@ -79,18 +78,15 @@ struct AccountSettingsView: View {
                             SettingsItem(
                                 icon: "thermometer",
                                 title: "Temperature Unit",
-                                subtitle: selectedTemperatureUnit == .fahrenheit ? "Fahrenheit (°F)" : "Celsius (°C)",
+                                subtitle: userProfile.temperatureUnit.displayName,
                                 showPicker: true,
                                 picker: AnyView(
-                                    Picker("Temperature", selection: $selectedTemperatureUnit) {
-                                        Text("°F").tag(SettingsTemperatureUnit.fahrenheit)
-                                        Text("°C").tag(SettingsTemperatureUnit.celsius)
+                                    Picker("Temperature", selection: $userProfile.temperatureUnit) {
+                                        Text("°F").tag(TemperatureUnit.fahrenheit)
+                                        Text("°C").tag(TemperatureUnit.celsius)
                                     }
                                     .pickerStyle(SegmentedPickerStyle())
                                     .frame(width: 100)
-                                    .onChange(of: selectedTemperatureUnit) { newValue in
-                                        UserDefaults.standard.set(newValue.rawValue, forKey: "temperatureUnit")
-                                    }
                                 )
                             )
                         }
@@ -133,9 +129,6 @@ struct AccountSettingsView: View {
         .sheet(isPresented: $showingSkinTypeSelection) {
             SkinTypeSelectionView(selectedSkinType: $userProfile.skinType)
         }
-        .onAppear {
-            loadCurrentSettings()
-        }
     }
     
     private var ageRangeText: String {
@@ -148,10 +141,6 @@ struct AccountSettingsView: View {
         }
     }
     
-    private func loadCurrentSettings() {
-        let savedUnit = UserDefaults.standard.string(forKey: "temperatureUnit") ?? "fahrenheit"
-        selectedTemperatureUnit = SettingsTemperatureUnit(rawValue: savedUnit) ?? .fahrenheit
-    }
 }
 
 // Settings Item Component (similar to ContactItem in HelpSupportView)
@@ -532,10 +521,6 @@ struct NameInputSheet: View {
     }
 }
 
-enum SettingsTemperatureUnit: String {
-    case fahrenheit = "fahrenheit"
-    case celsius = "celsius"
-}
 
 #Preview {
     AccountSettingsView()
