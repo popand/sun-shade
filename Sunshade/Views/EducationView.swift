@@ -5,33 +5,45 @@ struct EducationView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    EducationCard(
-                        icon: "sun.max.fill",
-                        title: "UV Index Basics",
-                        description: "Learn how UV radiation affects your skin and health.",
-                        color: AppColors.primary
-                    )
-                    
-                    EducationCard(
-                        icon: "shield.fill",
-                        title: "Sun Protection",
-                        description: "Essential tips for protecting yourself from harmful UV rays.",
-                        color: AppColors.success
-                    )
-                    
-                    EducationCard(
-                        icon: "clock.fill",
-                        title: "Safe Exposure Times",
-                        description: "Understanding how long you can safely stay in the sun.",
-                        color: AppColors.warning
-                    )
-                    
-                    EducationCard(
-                        icon: "drop.fill",
-                        title: "Sunscreen Guide",
-                        description: "How to choose and apply sunscreen effectively.",
-                        color: AppColors.info
-                    )
+                    NavigationLink(destination: EducationDetailView(topic: .uvBasics)) {
+                        EducationCard(
+                            icon: "sun.max.fill",
+                            title: "UV Index Basics",
+                            description: "Learn how UV radiation affects your skin and health.",
+                            color: AppColors.primary
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink(destination: EducationDetailView(topic: .sunProtection)) {
+                        EducationCard(
+                            icon: "shield.fill",
+                            title: "Sun Protection",
+                            description: "Essential tips for protecting yourself from harmful UV rays.",
+                            color: AppColors.success
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink(destination: EducationDetailView(topic: .safeExposure)) {
+                        EducationCard(
+                            icon: "clock.fill",
+                            title: "Safe Exposure Times",
+                            description: "Understanding how long you can safely stay in the sun.",
+                            color: AppColors.warning
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink(destination: EducationDetailView(topic: .sunscreenGuide)) {
+                        EducationCard(
+                            icon: "drop.fill",
+                            title: "Sunscreen Guide",
+                            description: "How to choose and apply sunscreen effectively.",
+                            color: AppColors.info
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding()
             }

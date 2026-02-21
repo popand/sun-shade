@@ -7,6 +7,7 @@ struct SafetyTimerView: View {
     @State private var selectedMinutes = 15
     @State private var sessionStartTime: Date?
     @State private var timer: Timer?
+    @AppStorage("reapplyRemindersEnabled") private var reapplyRemindersEnabled = true
     
     @ObservedObject private var exposureLog = ExposureLogManager.shared
     @ObservedObject private var dashboardViewModel: DashboardViewModel
@@ -61,6 +62,10 @@ struct SafetyTimerView: View {
                     .padding(.horizontal)
                 }
 
+                Toggle("Reapply Reminders", isOn: $reapplyRemindersEnabled)
+                    .tint(AppColors.primary)
+                    .padding(.horizontal)
+
                 Button(action: toggleTimer) {
                     Text(isTimerRunning ? "Stop Timer" : "Start Timer")
                         .font(.title2)
@@ -68,7 +73,7 @@ struct SafetyTimerView: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(isTimerRunning ? AppColors.danger : AppColors.primary)
+                        .background(isTimerRunning ? AppColors.warning : AppColors.primary)
                         .cornerRadius(12)
                 }
                 .accessibilityHint(isTimerRunning ? "Stops the current timer" : "Starts a \(selectedMinutes) minute timer")
@@ -100,7 +105,12 @@ struct SafetyTimerView: View {
         isTimerRunning = true
         sessionStartTime = Date()
         remainingTime = Double(selectedMinutes * 60)
-        
+
+        if reapplyRemindersEnabled {
+            NotificationService.shared.requestPermission()
+            NotificationService.shared.scheduleReapplicationReminder()
+        }
+
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [self] _ in
             if remainingTime > 0 {
                 remainingTime -= 1
@@ -114,6 +124,8 @@ struct SafetyTimerView: View {
         timer?.invalidate()
         timer = nil
         isTimerRunning = false
+
+        NotificationService.shared.cancelAllReminders()
         
         // Play alarm sound if timer completed naturally
         if timerCompleted {

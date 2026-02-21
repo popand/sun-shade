@@ -49,7 +49,7 @@ struct DailyProgressCard: View {
 
                 Spacer()
 
-                VStack {
+                VStack(spacing: 4) {
                     Text(viewModel.overExposurePercentage)
                         .font(.title)
                         .fontWeight(.bold)
@@ -58,15 +58,20 @@ struct DailyProgressCard: View {
                     Text("Over-exposure")
                         .font(.caption)
                         .foregroundColor(AppColors.textSecondary)
+
+                    Text(viewModel.hasOverExposure ? "Over-exposed" : "Safe")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(viewModel.hasOverExposure ? AppColors.warning : AppColors.success)
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("Over-exposure \(viewModel.overExposurePercentage)")
+                .accessibilityLabel("Over-exposure \(viewModel.overExposurePercentage), \(viewModel.hasOverExposure ? "Over-exposed" : "Safe")")
             }
         }
         .padding(20)
         .background(AppColors.cardBackground)
         .cornerRadius(16)
-        .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
+        .cardShadow()
         .padding(.horizontal, 20)
     }
 }

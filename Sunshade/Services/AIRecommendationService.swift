@@ -168,6 +168,7 @@ extension UserSunProfile: Hashable {
 
 /// AI-powered sun safety recommendation service
 /// Currently uses intelligent rule-based system, will integrate Apple's Foundation Models when available
+@MainActor
 class AIRecommendationService: ObservableObject {
     
     // MARK: - Properties
@@ -672,22 +673,22 @@ extension AIRecommendationService {
     ///   - recommendations: Recommendations to cache
     ///   - key: Cache key for the parameters
     private func cacheRecommendations(_ recommendations: [AIRecommendation], for key: CacheKey) {
-        cacheQueue.async {
+        cacheQueue.sync {
             // Clean expired entries before adding new one
             self.cleanExpiredCache()
-            
+
             // Limit cache size to prevent memory issues
             if self.recommendationCache.count >= self.maxCacheSize {
                 self.evictOldestCacheEntry()
             }
-            
+
             // Add new cache entry
             let cacheEntry = RecommendationCacheEntry(
                 recommendations: recommendations,
                 timestamp: Date(),
                 parameters: key
             )
-            
+
             self.recommendationCache[key] = cacheEntry
         }
     }

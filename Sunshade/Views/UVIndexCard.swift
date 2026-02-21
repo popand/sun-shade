@@ -138,7 +138,7 @@ struct UVIndexCard: View {
         .padding(24)
         .background(AppColors.cardBackground)
         .cornerRadius(20)
-        .shadow(color: AppColors.shadowColor, radius: 12, x: 0, y: 4)
+        .cardShadow()
         .padding(.horizontal, 20)
     }
 }

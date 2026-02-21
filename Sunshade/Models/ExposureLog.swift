@@ -11,7 +11,19 @@ struct ExposureSession: Identifiable, Codable {
     let longitude: Double?
     let uvIndex: Double
     let temperature: Int
-    
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+
     init(startTime: Date, endTime: Date, duration: TimeInterval, location: String, latitude: Double?, longitude: Double?, uvIndex: Double, temperature: Int) {
         self.id = UUID()
         self.startTime = startTime
@@ -23,17 +35,13 @@ struct ExposureSession: Identifiable, Codable {
         self.uvIndex = uvIndex
         self.temperature = temperature
     }
-    
+
     var timeOfDay: String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: startTime)
+        Self.timeFormatter.string(from: startTime)
     }
-    
+
     var dateString: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: startTime)
+        Self.dateFormatter.string(from: startTime)
     }
     
     var durationString: String {
@@ -55,6 +63,7 @@ class ExposureLogManager: ObservableObject {
     
     init() {
         loadSessions()
+        cleanupOldSessions()
     }
     
     func addSession(_ session: ExposureSession) {
@@ -65,6 +74,15 @@ class ExposureLogManager: ObservableObject {
     func clearLog() {
         sessions.removeAll()
         saveSessions()
+    }
+
+    func cleanupOldSessions(olderThan days: Int = 180) {
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let originalCount = sessions.count
+        sessions.removeAll { $0.startTime < cutoffDate }
+        if sessions.count < originalCount {
+            saveSessions()
+        }
     }
     
     private func saveSessions() {

@@ -132,3 +132,18 @@ extension AppColors {
         )
     }
 }
+
+// MARK: - Card Shadow ViewModifier
+
+struct CardShadow: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 2)
+    }
+}
+
+extension View {
+    func cardShadow() -> some View {
+        modifier(CardShadow())
+    }
+}

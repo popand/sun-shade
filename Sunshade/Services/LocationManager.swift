@@ -11,7 +11,12 @@ class LocationManager: NSObject, ObservableObject {
     @Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
     @Published var locationError: String?
     @Published var isLocationLoading: Bool = false
-    
+
+    /// Returns `true` when the user has denied or the system has restricted location access.
+    var isPermissionDenied: Bool {
+        authorizationStatus == .denied || authorizationStatus == .restricted
+    }
+
     override init() {
         super.init()
         locationManager.delegate = self

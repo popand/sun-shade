@@ -5,10 +5,23 @@ struct MainContentView: View {
     @ObservedObject private var userProfile = UserProfile.shared
     @State private var showDebugOptions = false
     @State private var showingSkinTypeOnboarding = false
-    
+    @State private var hasDismissedOnboardingBanner = false
+
     var body: some View {
         TabView {
             DashboardView(viewModel: dashboardViewModel)
+                .overlay(alignment: .top) {
+                    if !userProfile.hasCompletedSkinTypeOnboarding && !hasDismissedOnboardingBanner {
+                        SkinTypeOnboardingBanner(
+                            onTap: { showingSkinTypeOnboarding = true },
+                            onDismiss: {
+                                withAnimation { hasDismissedOnboardingBanner = true }
+                            }
+                        )
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .padding(.top, 50)
+                    }
+                }
                 .tabItem {
                     Image(systemName: "sun.max.fill")
                     Text("Dashboard")
@@ -172,6 +185,44 @@ struct ProfileActionRow: View {
             }
             .padding(.vertical, 8)
         }
+    }
+}
+
+// MARK: - Skin Type Onboarding Banner
+
+struct SkinTypeOnboardingBanner: View {
+    let onTap: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "person.crop.circle.badge.questionmark")
+                .font(.body)
+                .foregroundColor(AppColors.info)
+
+            Text("Set your skin type for personalized recommendations")
+                .font(.footnote)
+                .foregroundColor(AppColors.textPrimary)
+                .lineLimit(2)
+
+            Spacer()
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.caption2)
+                    .foregroundColor(AppColors.textMuted)
+            }
+            .accessibilityLabel("Dismiss skin type banner")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(AppColors.info.opacity(0.1))
+        .cornerRadius(12)
+        .padding(.horizontal, 20)
+        .contentShape(Rectangle())
+        .onTapGesture { onTap() }
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Double tap to open skin type setup")
     }
 }
 

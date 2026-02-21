@@ -16,6 +16,7 @@ class DashboardViewModel: ObservableObject {
     @Published var greeting: String = ""
     @Published var forecast: [ForecastDay] = []
     @Published var currentTanningQuality: TanningQuality = .fair
+    @Published var isLocationPermissionDenied: Bool = false
 
     private let weatherKitService = WeatherKitService()
     private let locationManager = LocationManager()
@@ -167,10 +168,12 @@ class DashboardViewModel: ObservableObject {
                 switch status {
                 case .denied, .restricted:
                     self?.currentLocation = "Location access denied"
+                    self?.isLocationPermissionDenied = true
                 case .notDetermined:
                     self?.currentLocation = "Location permission required"
+                    self?.isLocationPermissionDenied = false
                 default:
-                    break
+                    self?.isLocationPermissionDenied = false
                 }
             }
             .store(in: &cancellables)
