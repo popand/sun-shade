@@ -27,7 +27,7 @@ struct HeaderSection: View {
             Button(action: {
                 viewModel.refreshDataSync()
             }) {
-                Image(systemName: viewModel.isLoading ? "arrow.clockwise" : "arrow.clockwise")
+                Image(systemName: "arrow.clockwise")
                     .font(.title3)
                     .foregroundColor(viewModel.isLoading ? AppColors.textMuted : AppColors.primary)
                     .padding(12)
@@ -35,13 +35,15 @@ struct HeaderSection: View {
                     .clipShape(Circle())
                     .rotationEffect(.degrees(viewModel.isLoading ? 360 : 0))
                     .animation(
-                        viewModel.isLoading ? 
-                        Animation.linear(duration: 1.0).repeatForever(autoreverses: false) : 
-                        .default, 
+                        viewModel.isLoading ?
+                        Animation.linear(duration: 1.0).repeatForever(autoreverses: false) :
+                        .default,
                         value: viewModel.isLoading
                     )
             }
             .disabled(viewModel.isLoading)
+            .accessibilityLabel(viewModel.isLoading ? "Refreshing weather data" : "Refresh weather data")
+            .accessibilityHint(viewModel.isLoading ? "" : "Double tap to refresh")
         }
         .padding(.horizontal, 20)
     }

@@ -24,9 +24,6 @@ class DashboardViewModel: ObservableObject {
     private let exposureLogManager = ExposureLogManager.shared
     private var cancellables = Set<AnyCancellable>()
     
-    // MARK: - User Name State Management
-    
-    
     // Cached weekly session data to prevent O(n) filtering on every access
     private var cachedWeeklyData: (startOfWeek: Date, sessions: [ExposureSession], cacheDate: Date)?
     
@@ -112,6 +109,10 @@ class DashboardViewModel: ObservableObject {
         }
     }
     
+    var hasOverExposure: Bool {
+        return overExposurePercentage != "0%"
+    }
+
     var overExposurePercentage: String {
         let weekSessions = weeklySessionsCache.sessions
         
@@ -259,7 +260,9 @@ class DashboardViewModel: ObservableObject {
             
         } catch {
             weatherError = error.localizedDescription
+            #if DEBUG
             print("❌ Weather data fetch failed: \(error.localizedDescription)")
+            #endif
             
             // Don't use mock data - let the UI show the error state
             // Keep the last known values or show default empty state

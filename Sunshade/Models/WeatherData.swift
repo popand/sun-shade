@@ -84,10 +84,7 @@ struct WeatherData {
     var currentTanningQuality: TanningQuality {
         TanningQuality.fromConditions(uvIndex: uvIndex, cloudCover: cloudCover)
     }
-    
-    
-    
-    
+
     init(temperature: Double, uvIndex: Double, humidity: Int, cloudCover: Int, condition: String, description: String, iconName: String, forecast: [ForecastDay] = []) {
         self.temperature = temperature
         self.uvIndex = uvIndex

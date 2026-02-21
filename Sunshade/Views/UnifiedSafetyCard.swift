@@ -296,7 +296,9 @@ struct UnifiedSafetyCard: View {
             } catch {
                 // Handle cancellation gracefully
                 if !(error is CancellationError) {
+                    #if DEBUG
                     print("⚠️ Debounced update failed: \(error.localizedDescription)")
+                    #endif
                 }
             }
         }

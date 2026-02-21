@@ -11,7 +11,6 @@ import SwiftUI
 struct SunshadeApp: App {
     var body: some Scene {
         WindowGroup {
-            // Apple Sign-In capability is now properly configured
             MainContentView()
         }
     }

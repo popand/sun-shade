@@ -58,9 +58,7 @@ class ExposureLogManager: ObservableObject {
     }
     
     func addSession(_ session: ExposureSession) {
-        print("📝 Adding session: \(session.durationString) at \(session.timeOfDay)")
         sessions.insert(session, at: 0) // Add to beginning for most recent first
-        print("📊 Total sessions now: \(sessions.count)")
         saveSessions()
     }
     
@@ -73,24 +71,25 @@ class ExposureLogManager: ObservableObject {
         do {
             let encoded = try JSONEncoder().encode(sessions)
             userDefaults.set(encoded, forKey: sessionsKey)
-            print("💾 Successfully saved \(sessions.count) sessions")
         } catch {
+            #if DEBUG
             print("❌ Failed to save sessions: \(error)")
+            #endif
         }
     }
-    
+
     private func loadSessions() {
         guard let data = userDefaults.data(forKey: sessionsKey) else {
-            print("📂 No saved sessions found")
             return
         }
-        
+
         do {
             let decoded = try JSONDecoder().decode([ExposureSession].self, from: data)
             sessions = decoded
-            print("📂 Loaded \(sessions.count) sessions")
         } catch {
+            #if DEBUG
             print("❌ Failed to load sessions: \(error)")
+            #endif
         }
     }
     

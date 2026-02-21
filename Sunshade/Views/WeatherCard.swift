@@ -70,7 +70,9 @@ struct WeatherCard: View {
                 .padding(20)
             }
             .buttonStyle(PlainButtonStyle())
-            
+            .accessibilityLabel("\(viewModel.formattedTemperature), \(viewModel.weatherCondition), \(viewModel.cloudCover) percent cloud cover, tanning quality \(viewModel.currentTanningQuality.rawValue)")
+            .accessibilityHint(isExpanded ? "Double tap to collapse forecast" : "Double tap to expand 5-day forecast")
+
             // 5-Day Forecast (Expandable)
             if isExpanded {
                 VStack(spacing: 0) {
@@ -131,7 +133,7 @@ struct ForecastRowView: View {
     var body: some View {
         HStack(spacing: 8) {
             // Day
-            Text(isToday ? "Today" : dayFormatter.string(from: day.date))
+            Text(isToday ? "Today" : Self.dayFormatter.string(from: day.date))
                 .font(.subheadline)
                 .fontWeight(isToday ? .semibold : .regular)
                 .foregroundColor(AppColors.textPrimary)
@@ -208,9 +210,9 @@ struct ForecastRowView: View {
         }
     }
     
-    private var dayFormatter: DateFormatter {
+    private static let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEE"
         return formatter
-    }
+    }()
 }

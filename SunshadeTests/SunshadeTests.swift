@@ -11,10 +11,6 @@ import CoreLocation
 
 struct SunshadeTests {
 
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
-    }
-    
     @available(iOS 16.0, *)
     @Test func testWeatherKitIntegration() async throws {
         let weatherService = WeatherKitService()

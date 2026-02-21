@@ -126,36 +126,6 @@ struct ProfileView: View {
                 .cornerRadius(16)
                 .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                 
-                // Account Settings Section
-                VStack(spacing: 16) {
-                    HStack {
-                        Image(systemName: "gearshape")
-                            .foregroundColor(AppColors.primary)
-                            .font(.title3)
-                        
-                        Text("Account Settings")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(AppColors.textPrimary)
-                        
-                        Spacer()
-                    }
-                    
-                    VStack(spacing: 12) {
-                        LegalMenuItem(
-                            icon: "thermometer",
-                            title: "Temperature Unit",
-                            action: {
-                                // Account settings removed
-                            }
-                        )
-                    }
-                }
-                .padding()
-                .background(Color.white)
-                .cornerRadius(16)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
-                
                 // Privacy & Legal Section
                 VStack(spacing: 16) {
                     HStack {

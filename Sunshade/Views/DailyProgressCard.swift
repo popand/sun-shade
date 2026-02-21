@@ -24,37 +24,43 @@ struct DailyProgressCard: View {
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(AppColors.primary)
-                    
+
                     Text("Sessions")
                         .font(.caption)
                         .foregroundColor(AppColors.textSecondary)
                 }
-                
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(viewModel.sessionsThisWeek) sessions this week")
+
                 Spacer()
-                
+
                 VStack {
                     Text(viewModel.totalExposureThisWeek)
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(AppColors.accent)
-                    
+
                     Text("Total Time")
                         .font(.caption)
                         .foregroundColor(AppColors.textSecondary)
                 }
-                
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Total time \(viewModel.totalExposureThisWeek)")
+
                 Spacer()
-                
+
                 VStack {
                     Text(viewModel.overExposurePercentage)
                         .font(.title)
                         .fontWeight(.bold)
-                        .foregroundColor(viewModel.overExposurePercentage == "0%" ? AppColors.success : AppColors.warning)
-                    
+                        .foregroundColor(viewModel.hasOverExposure ? AppColors.warning : AppColors.success)
+
                     Text("Over-exposure")
                         .font(.caption)
                         .foregroundColor(AppColors.textSecondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Over-exposure \(viewModel.overExposurePercentage)")
             }
         }
         .padding(20)

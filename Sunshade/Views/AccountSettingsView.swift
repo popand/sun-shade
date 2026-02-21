@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AccountSettingsView: View {
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject private var userProfile = UserProfile.shared
     @State private var showingSkinTypeSelection = false
     
@@ -29,7 +29,7 @@ struct AccountSettingsView: View {
                     
                     // User Settings Section
                     VStack(spacing: 16) {
-                        SettingsSectionHeader(title: "User Settings", icon: "person")
+                        SectionHeader(title: "User Settings", icon: "person")
                         
                         VStack(spacing: 12) {
                             NameSettingsItem(userProfile: userProfile)
@@ -38,7 +38,7 @@ struct AccountSettingsView: View {
                     
                     // Profile Settings Section
                     VStack(spacing: 16) {
-                        SettingsSectionHeader(title: "Profile Settings", icon: "person.circle")
+                        SectionHeader(title: "Profile Settings", icon: "person.circle")
                         
                         VStack(spacing: 12) {
                             SettingsItem(
@@ -72,7 +72,7 @@ struct AccountSettingsView: View {
                     
                     // Preferences Section
                     VStack(spacing: 16) {
-                        SettingsSectionHeader(title: "Preferences", icon: "slider.horizontal.3")
+                        SectionHeader(title: "Preferences", icon: "slider.horizontal.3")
                         
                         VStack(spacing: 12) {
                             SettingsItem(
@@ -94,7 +94,7 @@ struct AccountSettingsView: View {
                     
                     // App Information Section
                     VStack(spacing: 16) {
-                        SettingsSectionHeader(title: "App Information", icon: "info.circle")
+                        SectionHeader(title: "App Information", icon: "info.circle")
                         
                         VStack(spacing: 12) {
                             SettingsInfoItem(
@@ -121,7 +121,7 @@ struct AccountSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
                 leading: Button("Done") {
-                    presentationMode.wrappedValue.dismiss()
+                    dismiss()
                 }
                 .foregroundColor(AppColors.primary)
             )
@@ -225,31 +225,10 @@ struct SettingsInfoItem: View {
     }
 }
 
-// Settings Section Header Component
-struct SettingsSectionHeader: View {
-    let title: String
-    let icon: String
-    
-    var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(AppColors.primary)
-                .font(.title3)
-            
-            Text(title)
-                .font(.headline)
-                .fontWeight(.semibold)
-                .foregroundColor(AppColors.textPrimary)
-            
-            Spacer()
-        }
-    }
-}
-
 // Skin Type Selection View (keeping existing implementation)
 struct SkinTypeSelectionView: View {
     @Binding var selectedSkinType: SkinType
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     @State private var tempSelection: SkinType
     
     init(selectedSkinType: Binding<SkinType>) {
@@ -277,7 +256,7 @@ struct SkinTypeSelectionView: View {
             .navigationBarItems(
                 leading: Button("Done") {
                     selectedSkinType = tempSelection
-                    presentationMode.wrappedValue.dismiss()
+                    dismiss()
                 }
                 .foregroundColor(AppColors.primary)
             )
@@ -437,7 +416,7 @@ struct NameInputSheet: View {
     @Binding var name: String
     let onSave: (String) -> Void
     let onCancel: () -> Void
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     @FocusState private var isTextFieldFocused: Bool
     
     private let maxNameLength = 50
@@ -510,7 +489,7 @@ struct NameInputSheet: View {
                     
                     Button(action: {
                         onCancel()
-                        presentationMode.wrappedValue.dismiss()
+                        dismiss()
                     }) {
                         Text("Cancel")
                             .font(.body)
@@ -533,7 +512,7 @@ struct NameInputSheet: View {
     private func saveAndDismiss() {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         onSave(trimmedName)
-        presentationMode.wrappedValue.dismiss()
+        dismiss()
     }
 }
 

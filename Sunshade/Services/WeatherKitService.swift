@@ -34,22 +34,28 @@ class WeatherKitService: ObservableObject {
     }
     
     func fetchWeatherData(for location: CLLocation, locationName: String = "") async throws -> WeatherData {
+        #if DEBUG
         print("📍 WEATHERKIT DEBUG:")
         print("   🗺️ Location: \(location.coordinate.latitude), \(location.coordinate.longitude)")
         if !locationName.isEmpty {
             print("   📍 Location Name: \(locationName)")
         }
+        #endif
         
         // Check if WeatherKit is available
         guard Self.isAvailable() else {
+            #if DEBUG
             print("⚠️ WeatherKit not available on this device")
+            #endif
             throw WeatherKitError.notAvailable
         }
         
         // Verify location is valid
         guard location.coordinate.latitude >= -90 && location.coordinate.latitude <= 90 &&
               location.coordinate.longitude >= -180 && location.coordinate.longitude <= 180 else {
+            #if DEBUG
             print("⚠️ Invalid location coordinates")
+            #endif
             throw WeatherKitError.locationError
         }
         
@@ -57,20 +63,24 @@ class WeatherKitService: ObservableObject {
             let weatherService = WeatherKit.WeatherService()
             let weather = try await weatherService.weather(for: location)
             
+            #if DEBUG
             print("🌤️ WEATHERKIT SUCCESS:")
             print("   🌡️ Temperature: \(weather.currentWeather.temperature.value)°\(weather.currentWeather.temperature.unit.symbol)")
             print("   ☀️ UV Index: \(weather.currentWeather.uvIndex.value)")
             print("   💧 Humidity: \(weather.currentWeather.humidity * 100)%")
             print("   ☁️ Cloud Cover: \(weather.currentWeather.cloudCover * 100)%")
             print("   🌦️ Condition: \(weather.currentWeather.condition.description)")
+            #endif
             
             return createWeatherData(from: weather, locationName: locationName)
             
         } catch let error as NSError {
+            #if DEBUG
             print("❌ WEATHERKIT ERROR: \(error)")
             print("   🔍 Error Domain: \(error.domain)")
             print("   🔢 Error Code: \(error.code)")
             print("   📝 Error Description: \(error.localizedDescription)")
+            #endif
             
             // Handle specific WeatherKit authentication errors
             if error.domain.contains("WeatherDaemon.WDSJWTAuthenticatorService") || 
@@ -126,6 +136,7 @@ class WeatherKitService: ObservableObject {
             }
         }
         
+        #if DEBUG
         print("📊 PROCESSED WEATHERKIT DATA:")
         print("   🌡️ Temperature: \(String(format: "%.1f", temperatureInCelsius))°C")
         print("   ☀️ UV Index: \(String(format: "%.1f", uvIndex))")
@@ -134,6 +145,7 @@ class WeatherKitService: ObservableObject {
         if !locationName.isEmpty {
             print("   🏙️ Location: \(locationName)")
         }
+        #endif
         
         return WeatherData(
             temperature: temperatureInCelsius,

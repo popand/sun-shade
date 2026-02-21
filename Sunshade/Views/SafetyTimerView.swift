@@ -37,23 +37,30 @@ struct SafetyTimerView: View {
                         Text(timeString(from: remainingTime))
                             .font(.system(size: 36, weight: .bold, design: .monospaced))
                             .foregroundColor(AppColors.textPrimary)
-                        
+
                         Text(isTimerRunning ? "Remaining" : "Set Timer")
                             .font(.subheadline)
                             .foregroundColor(AppColors.textSecondary)
                     }
                 }
-                
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(isTimerRunning
+                    ? "Timer, \(Int(remainingTime) / 60) minutes \(Int(remainingTime) % 60) seconds remaining"
+                    : "Timer not running")
+                .accessibilityValue(isTimerRunning
+                    ? "\(Int((remainingTime / Double(selectedMinutes * 60)) * 100)) percent remaining"
+                    : "")
+
                 if !isTimerRunning {
-                    Picker("Minutes", selection: $selectedMinutes) {
-                        ForEach([10, 15, 20, 25, 30], id: \.self) { minutes in
+                    Picker("Timer duration in minutes", selection: $selectedMinutes) {
+                        ForEach(SafetyConstants.TimerOptions.durations, id: \.self) { minutes in
                             Text("\(minutes) min").tag(minutes)
                         }
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     .padding(.horizontal)
                 }
-                
+
                 Button(action: toggleTimer) {
                     Text(isTimerRunning ? "Stop Timer" : "Start Timer")
                         .font(.title2)
@@ -64,6 +71,7 @@ struct SafetyTimerView: View {
                         .background(isTimerRunning ? AppColors.danger : AppColors.primary)
                         .cornerRadius(12)
                 }
+                .accessibilityHint(isTimerRunning ? "Stops the current timer" : "Starts a \(selectedMinutes) minute timer")
                 .padding(.horizontal)
                 
                 // Activity Log Card
@@ -72,6 +80,11 @@ struct SafetyTimerView: View {
                 Spacer(minLength: 10)
             }
             .navigationTitle("Safety Timer")
+            .onDisappear {
+                // Prevent timer from running after view is dismissed
+                timer?.invalidate()
+                timer = nil
+            }
         }
     }
     
@@ -105,21 +118,20 @@ struct SafetyTimerView: View {
         // Play alarm sound if timer completed naturally
         if timerCompleted {
             playAlarmSound()
+            #if DEBUG
             print("🔔 Timer completed - alarm played")
+            #endif
         }
-        
+
         // Log the session if it ran for at least 10 seconds
         if let startTime = sessionStartTime {
             let actualDuration = Date().timeIntervalSince(startTime)
+            #if DEBUG
             print("⏱️ Timer stopped. Duration: \(actualDuration) seconds")
+            #endif
             if actualDuration >= 10 {
-                print("✅ Duration >= 10s, logging session")
                 logExposureSession(startTime: startTime, actualDuration: actualDuration)
-            } else {
-                print("⚠️ Duration < 10s, not logging session")
             }
-        } else {
-            print("❌ No start time found")
         }
         
         remainingTime = 0
@@ -127,8 +139,6 @@ struct SafetyTimerView: View {
     }
     
     private func logExposureSession(startTime: Date, actualDuration: TimeInterval) {
-        print("🔄 Creating session with location: '\(dashboardViewModel.currentLocation)', UV: \(dashboardViewModel.currentUVIndex), temp: \(dashboardViewModel.temperature)")
-        
         let session = ExposureSession(
             startTime: startTime,
             endTime: Date(),
@@ -141,7 +151,6 @@ struct SafetyTimerView: View {
         )
         
         exposureLog.addSession(session)
-        print("🎯 Session added to log")
     }
     
     private func playAlarmSound() {
@@ -158,7 +167,6 @@ struct SafetyTimerView: View {
             AudioServicesPlaySystemSound(1013) // Sound ID for alarm tone
         }
         
-        print("🔊 Playing alarm sound and vibration")
     }
     
     func timeString(from timeInterval: TimeInterval) -> String {

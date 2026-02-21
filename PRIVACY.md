@@ -18,11 +18,6 @@ Sunshade is committed to protecting your privacy. This privacy policy explains h
 - **Source:** Apple's WeatherKit framework
 - **Usage:** Displayed in the app for safety recommendations
 
-### Authentication Data (Optional)
-- **What:** Apple ID information if you choose Sign in with Apple
-- **Storage:** Securely stored in iOS Keychain
-- **Usage:** Optional feature for personalized experience
-
 ### User Preferences
 - **What:** Skin type, age range, temperature unit preferences
 - **Storage:** Locally on your device in iOS UserDefaults
@@ -42,13 +37,11 @@ Sunshade is committed to protecting your privacy. This privacy policy explains h
 
 ## Data Security
 - Location requests are made in real-time and not stored
-- Authentication data is stored securely in iOS Keychain
 - User preferences are stored locally on your device
 - No data is transmitted to external servers except Apple's WeatherKit API
 
 ## Your Rights
 - **Location Access:** You can disable location access in iOS Settings (app functionality will be limited)
-- **Sign in with Apple:** Completely optional - app works without authentication
 - **Data Deletion:** Delete the app to remove all locally stored data
 
 ## Children's Privacy

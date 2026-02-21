@@ -2,7 +2,7 @@ import SwiftUI
 import MessageUI
 
 struct HelpSupportView: View {
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     @State private var showingMailComposer = false
     @State private var showingMailAlert = false
     
@@ -123,7 +123,7 @@ struct HelpSupportView: View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
                 leading: Button("Done") {
-                    presentationMode.wrappedValue.dismiss()
+                    dismiss()
                 }
                 .foregroundColor(AppColors.primary)
             )
@@ -220,7 +220,7 @@ struct FAQItem: View {
     let question: String
     let answer: String
     @State private var isExpanded = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button(action: {
@@ -234,18 +234,22 @@ struct FAQItem: View {
                         .fontWeight(.medium)
                         .foregroundColor(AppColors.textPrimary)
                         .multilineTextAlignment(.leading)
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .foregroundColor(AppColors.primary)
                         .font(.system(size: 14))
+                        .accessibilityHidden(true)
                 }
                 .padding()
                 .contentShape(Rectangle())
             }
             .buttonStyle(PlainButtonStyle())
-            
+            .accessibilityLabel(question)
+            .accessibilityHint(isExpanded ? "Double tap to collapse" : "Double tap to expand answer")
+            .accessibilityAddTraits(.isButton)
+
             if isExpanded {
                 Text(answer)
                     .font(.body)
@@ -289,8 +293,8 @@ struct MailComposeView: UIViewControllerRepresentable {
     let recipients: [String]
     let subject: String
     let messageBody: String
-    @Environment(\.presentationMode) var presentationMode
-    
+    @Environment(\.dismiss) private var dismiss
+
     func makeUIViewController(context: Context) -> MFMailComposeViewController {
         let composer = MFMailComposeViewController()
         composer.mailComposeDelegate = context.coordinator
@@ -314,7 +318,7 @@ struct MailComposeView: UIViewControllerRepresentable {
         }
         
         func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
-            parent.presentationMode.wrappedValue.dismiss()
+            parent.dismiss()
         }
     }
 }

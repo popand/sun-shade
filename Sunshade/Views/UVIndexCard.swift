@@ -56,20 +56,24 @@ struct UVIndexCard: View {
                         Text("\(Int(viewModel.currentUVIndex))")
                             .font(.system(size: 56, weight: .bold, design: .rounded))
                             .foregroundColor(AppColors.textPrimary)
-                        
+
                         Text("UV Index")
                             .font(.headline)
                             .foregroundColor(AppColors.textSecondary)
                     }
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("UV Index \(Int(viewModel.currentUVIndex)) out of 11, \(viewModel.uvLevel.description)")
+                .accessibilityValue("\(Int((viewModel.currentUVIndex / 11.0) * 100)) percent")
             }
-            
+
             if viewModel.weatherError == nil {
                 HStack(spacing: 8) {
                     Circle()
                         .fill(viewModel.uvLevel.color)
                         .frame(width: 12, height: 12)
-                    
+                        .accessibilityHidden(true)
+
                     Text(viewModel.uvLevel.description)
                         .font(.title3)
                         .fontWeight(.semibold)
@@ -79,6 +83,7 @@ struct UVIndexCard: View {
                 .padding(.vertical, 10)
                 .background(viewModel.uvLevel.color.opacity(0.1))
                 .cornerRadius(25)
+                .accessibilityLabel("UV level: \(viewModel.uvLevel.description)")
                 
                 // Safe Exposure Time Recommendation
                 HStack(spacing: 12) {
@@ -108,17 +113,19 @@ struct UVIndexCard: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(AppColors.warning)
                             .font(.title3)
-                        
+
                         Text("High UV levels detected. Use sun protection.")
                             .font(.subheadline)
                             .foregroundColor(AppColors.textSecondary)
                             .multilineTextAlignment(.leading)
-                        
+
                         Spacer()
                     }
                     .padding(16)
                     .background(AppColors.warning.opacity(0.1))
                     .cornerRadius(12)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Warning: High UV levels detected. Use sun protection.")
                 }
                 
                 // Apple Weather Attribution

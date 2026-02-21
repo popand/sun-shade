@@ -104,7 +104,9 @@ struct WeatherConditionMapper {
         }
         
         // Default to clear if no match found (conservative choice)
+        #if DEBUG
         print("⚠️ Unknown weather condition: '\(conditionString)' - defaulting to clear")
+        #endif
         return .clear
     }
     
@@ -193,9 +195,7 @@ class AIRecommendationService: ObservableObject {
     private let cacheQueue = DispatchQueue(label: "ai.recommendation.cache", qos: .utility)
     
     #if canImport(FoundationModels)
-    private var foundationModelSession: FoundationModelSession?
-    #else
-    private var foundationModelSession: Any? // Placeholder for future
+    private var languageModelSession: Any?
     #endif
     
     private let fallbackService = FallbackRecommendationService()
@@ -261,7 +261,9 @@ class AIRecommendationService: ObservableObject {
             
         } catch {
             lastError = error
+            #if DEBUG
             print("❌ AI Recommendation generation failed: \(error.localizedDescription)")
+            #endif
             
             // Fallback to rule-based recommendations
             let fallbackRecommendations = await generateFallbackRecommendations(
@@ -314,21 +316,28 @@ class AIRecommendationService: ObservableObject {
     // MARK: - Private Methods
     
     private func checkAvailability() {
-        // Check if Foundation Models framework is available
         #if canImport(FoundationModels)
-        // When FoundationModels is available, check if device supports it
-        isAvailable = FoundationModel.isAvailable
+        if #available(iOS 26.0, *) {
+            if case .available = SystemLanguageModel.default.availability {
+                isAvailable = true
+                languageModelSession = LanguageModelSession()
+            } else {
+                isAvailable = false
+            }
+        } else {
+            isAvailable = false
+        }
         #else
-        // For now, use feature flags to determine availability
-        isAvailable = FeatureFlags.appleIntelligenceEnabled
+        isAvailable = false
         #endif
-        
-        // Additional hardware capability checks
+
         if isAvailable {
             isAvailable = FeatureFlags.supportsOnDeviceAI
         }
-        
+
+        #if DEBUG
         print("🤖 AI Recommendation Service - Available: \(isAvailable)")
+        #endif
     }
     
     private func generateAIRecommendations(
@@ -345,40 +354,31 @@ class AIRecommendationService: ObservableObject {
         )
         
         #if canImport(FoundationModels)
-        // Use Foundation Models when available
-        guard let session = foundationModelSession else {
-            throw AIRecommendationError.sessionNotAvailable
+        if #available(iOS 26.0, *), let session = languageModelSession as? LanguageModelSession {
+            // TODO: Implement structured output parsing when Generable conformance is added
+            let _ = try await session.respond(to: prompt)
+            return generateIntelligentFallback(context: context, userProfile: userProfile)
         }
-        
-        let response = try await session.generate(
-            prompt: prompt,
-            outputType: [AIRecommendation].self
-        )
-        
-        return response
-        #else
-        // For now, use intelligent rule-based system
-        return generateIntelligentFallback(context: context, userProfile: userProfile)
         #endif
+        return generateIntelligentFallback(context: context, userProfile: userProfile)
     }
     
     private func generateRecommendationsFromPrompt(_ prompt: String) async -> [AIRecommendation] {
         #if canImport(FoundationModels)
-        // Implementation for Foundation Models
-        guard let session = foundationModelSession else {
-            return []
+        if #available(iOS 26.0, *), let session = languageModelSession as? LanguageModelSession {
+            do {
+                let _ = try await session.respond(to: prompt)
+                // TODO: Parse text response into structured recommendations
+                return []
+            } catch {
+                #if DEBUG
+                print("❌ Failed to generate from prompt: \(error)")
+                #endif
+                return []
+            }
         }
-        
-        do {
-            return try await session.generate(prompt: prompt, outputType: [AIRecommendation].self)
-        } catch {
-            print("❌ Failed to generate from prompt: \(error)")
-            return []
-        }
-        #else
-        // Return empty for now, will be implemented when framework is available
-        return []
         #endif
+        return []
     }
     
     private func buildComprehensivePrompt(
@@ -810,7 +810,6 @@ extension AIRecommendationService {
     
     /// Removes expired cache entries
     private func cleanExpiredCache() {
-        let now = Date()
         recommendationCache = recommendationCache.filter { _, entry in
             entry.isValid(ttl: cacheTTL)
         }

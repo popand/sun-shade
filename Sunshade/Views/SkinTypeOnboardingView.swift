@@ -3,7 +3,7 @@ import SwiftUI
 /// Onboarding view to collect user's skin type for safety recommendations
 struct SkinTypeOnboardingView: View {
     @ObservedObject private var userProfile = UserProfile.shared
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     @State private var selectedSkinType: SkinType = .type1
     @State private var showingConfirmation = false
     
@@ -112,7 +112,7 @@ struct SkinTypeOnboardingView: View {
             Button("Confirm") {
                 userProfile.skinType = selectedSkinType
                 userProfile.hasCompletedSkinTypeOnboarding = true
-                presentationMode.wrappedValue.dismiss()
+                dismiss()
             }
         } message: {
             Text("You selected Type \(selectedSkinType.rawValue) - \(selectedSkinType.description). This will be used to provide personalized sun safety recommendations.")
@@ -139,6 +139,7 @@ struct OnboardingSkinTypeRow: View {
                             Circle()
                                 .stroke(isSelected ? AppColors.primary : Color.clear, lineWidth: 3)
                         )
+                        .accessibilityHidden(true)
                     
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
@@ -193,8 +194,11 @@ struct OnboardingSkinTypeRow: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Type \(skinType.rawValue), \(skinType.description). \(detailedDescription). Burns in \(skinType.baseProtectionTime) minutes. \(safetyLevel)")
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
     }
-    
+
     private var skinTypeColor: Color {
         switch skinType {
         case .type1: return Color(red: 0.98, green: 0.89, blue: 0.80)

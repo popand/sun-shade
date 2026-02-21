@@ -139,6 +139,12 @@ enum SafetyConstants {
         }
     }
     
+    // MARK: - Timer Options
+
+    enum TimerOptions {
+        static let durations = [10, 15, 20, 25, 30]
+    }
+
     // MARK: - Cloud Cover Constants
     
     enum CloudCover {

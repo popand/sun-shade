@@ -24,13 +24,11 @@ Sunshade is your personal UV safety companion that helps you enjoy the sun safel
 • Sun exposure timer with safety alerts
 • Activity tracking for outdoor adventures
 • Dark mode support for comfortable viewing
-• Sign in with Apple for secure authentication
-
 **Safety First:**
 Built with safety as the top priority, Sunshade uses scientifically-backed UV calculations to provide accurate exposure time recommendations. Whether you're planning beach time, hiking, or daily walks, Sunshade keeps you informed.
 
 **Privacy Focused:**
-Your data stays private with secure Keychain storage and optional Sign in with Apple authentication.
+Your data stays private with local-only storage on your device.
 
 Perfect for outdoor enthusiasts, families, and anyone who wants to enjoy the sun responsibly.
 
@@ -61,10 +59,6 @@ Not required - all content is original or provided via Apple's WeatherKit under 
 
 ## App Review Information
 
-### Sign-In Information
-- **Sign-in required**: No (checkbox unchecked)
-- **Demo Account**: Not needed (app works without account)
-
 ### Contact Information
 - **First Name**: Andrei
 - **Last Name**: Pop  
@@ -76,10 +70,9 @@ This app provides UV safety information and sun exposure tracking.
 
 Key points for review:
 • Location permission is required to fetch local UV index data via WeatherKit API
-• Sign in with Apple is optional - app works fully without authentication
-• No demo account needed - all features accessible without sign-in
+• No sign-in required - all features accessible immediately
 • Uses Apple's WeatherKit framework for UV and weather data
-• All user data stored securely in iOS Keychain (authentication) and UserDefaults (preferences)
+• All user data stored locally in UserDefaults (preferences)
 • App provides educational UV safety information, not medical advice
 
 The app will request location permission on first launch to provide accurate local UV index readings. This is essential for the core functionality.
@@ -107,8 +100,8 @@ The app will request location permission on first launch to provide accurate loc
 **Final Rating**: 9+ (Appropriate for health/wellness content)
 
 ## App Store Review Guidelines Compliance
-✅ Uses only approved APIs (WeatherKit, Core Location, Sign in with Apple)
+✅ Uses only approved APIs (WeatherKit, Core Location)
 ✅ Provides clear value to users (UV safety)  
-✅ Respects user privacy (Keychain storage)
+✅ Respects user privacy (local storage only)
 ✅ No inappropriate content
 ✅ Follows iOS design guidelines

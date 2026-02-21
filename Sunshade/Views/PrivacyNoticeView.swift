@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PrivacyNoticeView: View {
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         NavigationView {
@@ -27,7 +27,7 @@ struct PrivacyNoticeView: View {
                     
                     // Privacy Sections
                     VStack(spacing: 16) {
-                        PrivacySectionHeader(title: "Data Collection", icon: "doc.text")
+                        SectionHeader(title: "Data Collection", icon: "doc.text")
                         
                         VStack(spacing: 12) {
                             PrivacyCard(
@@ -43,7 +43,7 @@ struct PrivacyNoticeView: View {
                     }
                     
                     VStack(spacing: 16) {
-                        PrivacySectionHeader(title: "Data Security", icon: "lock.shield")
+                        SectionHeader(title: "Data Security", icon: "lock.shield")
                         
                         VStack(spacing: 12) {
                             PrivacyCard(
@@ -59,7 +59,7 @@ struct PrivacyNoticeView: View {
                     }
                     
                     VStack(spacing: 16) {
-                        PrivacySectionHeader(title: "Third-Party Services", icon: "cloud")
+                        SectionHeader(title: "Third-Party Services", icon: "cloud")
                         
                         VStack(spacing: 12) {
                             PrivacyCard(
@@ -75,7 +75,7 @@ struct PrivacyNoticeView: View {
                     }
                     
                     VStack(spacing: 16) {
-                        PrivacySectionHeader(title: "Your Rights", icon: "person.badge.key")
+                        SectionHeader(title: "Your Rights", icon: "person.badge.key")
                         
                         VStack(spacing: 12) {
                             PrivacyCard(
@@ -91,7 +91,7 @@ struct PrivacyNoticeView: View {
                     }
                     
                     VStack(spacing: 16) {
-                        PrivacySectionHeader(title: "Updates & Contact", icon: "envelope")
+                        SectionHeader(title: "Updates & Contact", icon: "envelope")
                         
                         VStack(spacing: 12) {
                             PrivacyCard(
@@ -120,7 +120,7 @@ struct PrivacyNoticeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
                 leading: Button("Done") {
-                    presentationMode.wrappedValue.dismiss()
+                    dismiss()
                 }
                 .foregroundColor(AppColors.primary)
             )
@@ -131,27 +131,6 @@ struct PrivacyNoticeView: View {
         let formatter = DateFormatter()
         formatter.dateStyle = .long
         return formatter.string(from: Date())
-    }
-}
-
-// Privacy Section Header Component
-struct PrivacySectionHeader: View {
-    let title: String
-    let icon: String
-    
-    var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(AppColors.primary)
-                .font(.title3)
-            
-            Text(title)
-                .font(.headline)
-                .fontWeight(.semibold)
-                .foregroundColor(AppColors.textPrimary)
-            
-            Spacer()
-        }
     }
 }
 
