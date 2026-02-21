@@ -16,7 +16,7 @@ struct SafetyTimerView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 20) {
                 Spacer(minLength: 20)
                 
@@ -57,7 +57,7 @@ struct SafetyTimerView: View {
                             Text("\(minutes) min").tag(minutes)
                         }
                     }
-                    .pickerStyle(SegmentedPickerStyle())
+                    .pickerStyle(.segmented)
                     .padding(.horizontal)
                 }
 

@@ -1,4 +1,5 @@
 import Foundation
+import FoundationModels
 
 /// Feature flags for managing experimental and future features
 struct FeatureFlags {
@@ -16,17 +17,14 @@ struct FeatureFlags {
     /// Enable Apple Intelligence integration when Foundation Models becomes available
     /// This will be set to true when iOS supports Foundation Models framework
     static var appleIntelligenceEnabled: Bool {
-        #if canImport(FoundationModels)
         return true
-        #else
-        return false
-        #endif
     }
     
     /// Check if the device supports on-device AI processing
     static var supportsOnDeviceAI: Bool {
-        // This will check for specific hardware capabilities in the future
-        // For now, return false as the framework isn't available
+        if case .available = SystemLanguageModel.default.availability {
+            return true
+        }
         return false
     }
     

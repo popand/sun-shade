@@ -8,7 +8,7 @@ struct SkinTypeOnboardingView: View {
     @State private var showingConfirmation = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     // Header Section
@@ -106,7 +106,6 @@ struct SkinTypeOnboardingView: View {
             .navigationTitle("")
             .navigationBarHidden(true)
         }
-        .navigationViewStyle(StackNavigationViewStyle())
         .alert("Confirm Your Skin Type", isPresented: $showingConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Confirm") {
@@ -193,7 +192,7 @@ struct OnboardingSkinTypeRow: View {
                     .stroke(isSelected ? AppColors.primary : Color.clear, lineWidth: 2)
             )
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Type \(skinType.rawValue), \(skinType.description). \(detailedDescription). Burns in \(skinType.baseProtectionTime) minutes. \(safetyLevel)")
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)

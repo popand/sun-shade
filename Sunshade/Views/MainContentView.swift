@@ -54,7 +54,7 @@ struct SimpleProfileView: View {
     @ObservedObject private var userProfile = UserProfile.shared
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 20) {
                 // User Profile Header
                 VStack(spacing: 16) {

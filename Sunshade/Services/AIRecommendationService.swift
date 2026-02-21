@@ -1,11 +1,7 @@
 import Foundation
 import SwiftUI
 
-// MARK: - Foundation Models Integration
-// Note: FoundationModels will be conditionally imported when available
-#if canImport(FoundationModels)
 import FoundationModels
-#endif
 
 // MARK: - Weather Condition Mapping
 
@@ -194,11 +190,7 @@ class AIRecommendationService: ObservableObject {
     /// Queue for thread-safe cache operations
     private let cacheQueue = DispatchQueue(label: "ai.recommendation.cache", qos: .utility)
     
-    #if canImport(FoundationModels)
-    private var languageModelSession: Any?
-    #endif
-    
-    private let fallbackService = FallbackRecommendationService()
+    private var languageModelSession: LanguageModelSession?
     
     // MARK: - Initialization
     
@@ -316,23 +308,11 @@ class AIRecommendationService: ObservableObject {
     // MARK: - Private Methods
     
     private func checkAvailability() {
-        #if canImport(FoundationModels)
-        if #available(iOS 26.0, *) {
-            if case .available = SystemLanguageModel.default.availability {
-                isAvailable = true
-                languageModelSession = LanguageModelSession()
-            } else {
-                isAvailable = false
-            }
+        if case .available = SystemLanguageModel.default.availability {
+            isAvailable = true
+            languageModelSession = LanguageModelSession()
         } else {
             isAvailable = false
-        }
-        #else
-        isAvailable = false
-        #endif
-
-        if isAvailable {
-            isAvailable = FeatureFlags.supportsOnDeviceAI
         }
 
         #if DEBUG
@@ -345,40 +325,40 @@ class AIRecommendationService: ObservableObject {
         userProfile: UserSunProfile,
         location: String
     ) async throws -> [AIRecommendation] {
-        
-        // Build the AI prompt
         let prompt = buildComprehensivePrompt(
             context: context,
             userProfile: userProfile,
             location: location
         )
-        
-        #if canImport(FoundationModels)
-        if #available(iOS 26.0, *), let session = languageModelSession as? LanguageModelSession {
-            // TODO: Implement structured output parsing when Generable conformance is added
-            let _ = try await session.respond(to: prompt)
+
+        guard let session = languageModelSession else {
             return generateIntelligentFallback(context: context, userProfile: userProfile)
         }
-        #endif
-        return generateIntelligentFallback(context: context, userProfile: userProfile)
-    }
-    
-    private func generateRecommendationsFromPrompt(_ prompt: String) async -> [AIRecommendation] {
-        #if canImport(FoundationModels)
-        if #available(iOS 26.0, *), let session = languageModelSession as? LanguageModelSession {
-            do {
-                let _ = try await session.respond(to: prompt)
-                // TODO: Parse text response into structured recommendations
-                return []
-            } catch {
-                #if DEBUG
-                print("❌ Failed to generate from prompt: \(error)")
-                #endif
-                return []
-            }
+
+        let response = try await session.respond(to: prompt, generating: AIRecommendationResponse.self)
+        let result = response.content
+
+        if result.recommendations.isEmpty {
+            return generateIntelligentFallback(context: context, userProfile: userProfile)
         }
-        #endif
-        return []
+
+        return result.recommendations
+    }
+
+    private func generateRecommendationsFromPrompt(_ prompt: String) async -> [AIRecommendation] {
+        guard let session = languageModelSession else {
+            return []
+        }
+
+        do {
+            let response = try await session.respond(to: prompt, generating: AIRecommendationResponse.self)
+            return response.content.recommendations
+        } catch {
+            #if DEBUG
+            print("❌ Failed to generate from prompt: \(error)")
+            #endif
+            return []
+        }
     }
     
     private func buildComprehensivePrompt(
@@ -387,31 +367,13 @@ class AIRecommendationService: ObservableObject {
         location: String
     ) -> String {
         return """
-        Generate personalized sun safety recommendations based on the following context:
-        
-        ENVIRONMENTAL CONDITIONS:
-        - UV Index: \(context.uvIndex)
-        - Weather: \(context.weather.rawValue)
-        - Time: \(context.timeOfDay.rawValue)
-        - Season: \(context.season.rawValue)
-        - Location: \(location)
-        
-        USER PROFILE:
-        - Skin Type: \(userProfile.skinType.description) (Type \(userProfile.skinType.rawValue))
-        - Age Range: \(userProfile.ageRange.rawValue)
-        - Photosensitive Medications: \(userProfile.photosensitiveMedications)
-        - Activities: \(userProfile.activities.map { $0.rawValue }.joined(separator: ", "))
-        - Preferences: Shade(\(userProfile.preferences.prefersShade)), Sunscreen(\(userProfile.preferences.usesSunscreen))
-        
-        REQUIREMENTS:
-        - Generate 3-5 personalized recommendations
-        - Prioritize by urgency and relevance
-        - Include specific timing and protection advice
-        - Use natural, conversational language
-        - Provide reasoning for each recommendation
-        - Consider user's skin type and activity patterns
-        
-        Return recommendations as structured AIRecommendation objects with appropriate priority, category, and color coding.
+        Sun safety recommendations needed.
+
+        UV: \(context.uvIndex) | Weather: \(context.weather.rawValue) | Time: \(context.timeOfDay.rawValue) | Season: \(context.season.rawValue) | Location: \(location)
+        Skin: Type \(userProfile.skinType.rawValue) (\(userProfile.skinType.description)) | Age: \(userProfile.ageRange.rawValue) | Photosensitive meds: \(userProfile.photosensitiveMedications)
+        Activities: \(userProfile.activities.map { $0.rawValue }.joined(separator: ", "))
+
+        Generate 3-5 personalized recommendations prioritized by urgency. Include specific timing, protection advice, and reasoning.
         """
     }
     
@@ -639,30 +601,16 @@ class AIRecommendationService: ObservableObject {
         userProfile: UserSunProfile,
         currentTime: Date
     ) async -> [AIRecommendation] {
-        
-        // Use fallback service for older iOS versions
-        let legacyRecommendations = fallbackService.generateRecommendations(
+        let context = buildEnvironmentalContext(
             uvIndex: uvIndex,
             weather: weather,
             currentTime: currentTime
         )
-        
-        // Add safety warning if using defaults
-        var aiRecommendations = legacyRecommendations.map { legacy in
-            AIRecommendation(
-                priority: RecommendationPriority(rawValue: legacy.priority) ?? .routine,
-                message: legacy.message,
-                timeframe: legacy.timeframe,
-                reasoning: legacy.reasoning,
-                category: RecommendationCategory(rawValue: legacy.category) ?? .protection,
-                iconName: legacy.iconName,
-                colorScheme: RecommendationColor(rawValue: legacy.colorName) ?? .blue
-            )
-        }
-        
-        // Add safety warning if user hasn't completed onboarding
+
+        var recommendations = generateIntelligentFallback(context: context, userProfile: userProfile)
+
         if !UserProfile.shared.hasCompletedSkinTypeOnboarding {
-            aiRecommendations.insert(AIRecommendation(
+            recommendations.insert(AIRecommendation(
                 priority: .urgent,
                 message: "⚠️ Using conservative skin type defaults. Set your actual skin type in settings for personalized recommendations.",
                 timeframe: "Update settings",
@@ -672,8 +620,8 @@ class AIRecommendationService: ObservableObject {
                 colorScheme: .orange
             ), at: 0)
         }
-        
-        return aiRecommendations
+
+        return recommendations
     }
 }
 
@@ -699,74 +647,10 @@ enum AIRecommendationError: Error, LocalizedError {
     }
 }
 
-// MARK: - Fallback Service for older iOS versions
-
-class FallbackRecommendationService {
-    
-    func generateRecommendations(
-        uvIndex: Double,
-        weather: WeatherData,
-        currentTime: Date
-    ) -> [LegacyRecommendation] {
-        
-        var recommendations: [LegacyRecommendation] = []
-        
-        // Basic UV-based recommendations (existing logic)
-        if uvIndex >= 6 {
-            recommendations.append(LegacyRecommendation(
-                priority: "important",
-                message: "Seek shade between 10 AM - 4 PM",
-                timeframe: "Peak hours",
-                reasoning: "High UV index requires shade protection",
-                category: "timing",
-                iconName: "sun.max.fill",
-                colorName: "orange"
-            ))
-        }
-        
-        recommendations.append(LegacyRecommendation(
-            priority: "routine",
-            message: "Apply SPF 30+ sunscreen 15 minutes before exposure",
-            timeframe: "Before going outside",
-            reasoning: "Standard sun protection practice",
-            category: "protection",
-            iconName: "shield.fill",
-            colorName: "blue"
-        ))
-        
-        recommendations.append(LegacyRecommendation(
-            priority: "routine",
-            message: "Reapply sunscreen every 2 hours",
-            timeframe: "Throughout the day",
-            reasoning: "Sunscreen effectiveness decreases over time",
-            category: "protection",
-            iconName: "arrow.clockwise",
-            colorName: "blue"
-        ))
-        
-        return recommendations
-    }
-}
-
-// MARK: - Backwards Compatibility
+// MARK: - Cache Management
 
 extension AIRecommendationService {
-    
-    /// Legacy method for iOS compatibility
-    func getLegacyRecommendations(
-        uvIndex: Double,
-        weather: WeatherData
-    ) -> [String] {
-        
-        let legacyRecommendations = fallbackService.generateRecommendations(
-            uvIndex: uvIndex,
-            weather: weather,
-            currentTime: Date()
-        )
-        
-        return legacyRecommendations.map { $0.message }
-    }
-    
+
     // MARK: - Cache Management Methods
     
     /// Retrieves cached recommendations if valid and available

@@ -16,8 +16,7 @@ class DashboardViewModel: ObservableObject {
     @Published var greeting: String = ""
     @Published var forecast: [ForecastDay] = []
     @Published var currentTanningQuality: TanningQuality = .fair
-    
-    @available(iOS 16.0, *)
+
     private let weatherKitService = WeatherKitService()
     private let locationManager = LocationManager()
     private let userProfile = UserProfile.shared
@@ -241,12 +240,7 @@ class DashboardViewModel: ObservableObject {
             // Only pass location name if it's not a loading/error state
             let locationName = currentLocation.starts(with: "Loading") || currentLocation.starts(with: "Location access") || currentLocation.starts(with: "Location permission") ? "" : currentLocation
             
-            let weatherData: WeatherData
-            if #available(iOS 16.0, *) {
-                weatherData = try await weatherKitService.fetchWeatherData(for: location, locationName: locationName)
-            } else {
-                throw NSError(domain: "WeatherService", code: -1, userInfo: [NSLocalizedDescriptionKey: "WeatherKit requires iOS 16.0 or later"])
-            }
+            let weatherData = try await weatherKitService.fetchWeatherData(for: location, locationName: locationName)
             
 
             

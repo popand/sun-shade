@@ -38,7 +38,7 @@ struct ProfileView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 20) {
                 HStack {
                     Image(systemName: "person.circle.fill")
@@ -49,7 +49,7 @@ struct ProfileView: View {
                         if isEditingName {
                             HStack {
                                 TextField("Enter your name", text: $tempName)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .textFieldStyle(.roundedBorder)
                                     .onAppear {
                                         tempName = userProfile.name
                                     }
@@ -321,7 +321,7 @@ struct LegalMenuItem: View {
                     .padding(.vertical, 8)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(PlainButtonStyle())
+                .buttonStyle(.plain)
             }
         }
     }

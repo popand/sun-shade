@@ -1,35 +1,47 @@
 import Foundation
 import SwiftUI
+import FoundationModels
 
 // MARK: - AI Recommendation Data Models
 
 /// Structured data model for AI-generated sun safety recommendations
-/// Will integrate with Foundation Models framework when available
-/// Note: @Generable macro will be added when FoundationModels becomes available
+@Generable
 struct AIRecommendation {
-    /// Priority level of the recommendation
+    @Guide(description: "Priority level of the recommendation")
     let priority: RecommendationPriority
-    
-    /// Main recommendation message
+
+    @Guide(description: "Main recommendation message with specific actionable advice")
     let message: String
-    
-    /// Time context for the recommendation
+
+    @Guide(description: "Time context for the recommendation, e.g. 'Next 2 hours' or 'Before going outside'")
     let timeframe: String
-    
-    /// AI reasoning behind the recommendation
+
+    @Guide(description: "Brief reasoning behind this recommendation")
     let reasoning: String
-    
-    /// Category of the recommendation
+
+    @Guide(description: "Category of the recommendation")
     let category: RecommendationCategory
-    
-    /// Icon name for visual representation
+
+    @Guide(description: "SF Symbol icon name", .anyOf([
+        "exclamationmark.triangle.fill", "shield.fill", "clock.fill",
+        "figure.walk", "figure.pool.swim", "drop.fill", "pills.fill",
+        "sun.max.fill", "cloud.sun.fill", "heart.fill", "calendar",
+        "arrow.clockwise"
+    ]))
     let iconName: String
-    
-    /// Color scheme for the recommendation
+
+    @Guide(description: "Color scheme for visual presentation")
     let colorScheme: RecommendationColor
 }
 
+/// Wrapper for structured output generation
+@Generable
+struct AIRecommendationResponse {
+    let recommendations: [AIRecommendation]
+}
+
 /// Priority levels for recommendations
+@Generable
 enum RecommendationPriority: String, CaseIterable {
     case critical = "critical"      // Immediate danger (UV 10+, extreme conditions)
     case urgent = "urgent"          // High risk (UV 8-9, needs immediate action)
@@ -59,6 +71,7 @@ enum RecommendationPriority: String, CaseIterable {
 }
 
 /// Categories of sun safety recommendations
+@Generable
 enum RecommendationCategory: String, CaseIterable {
     case timing = "timing"           // When to go outside/avoid sun
     case protection = "protection"   // SPF, clothing, accessories
@@ -97,6 +110,7 @@ enum RecommendationCategory: String, CaseIterable {
 }
 
 /// Color schemes for recommendations
+@Generable
 enum RecommendationColor: String, CaseIterable {
     case red = "red"         // Critical/urgent
     case orange = "orange"   // Important/warning
@@ -402,19 +416,6 @@ enum UVRiskLevel: String, CaseIterable {
     case extreme = "extreme"
 }
 
-// MARK: - Fallback for older iOS versions
-
-/// Simplified recommendation model for backwards compatibility
-struct LegacyRecommendation {
-    let priority: String
-    let message: String
-    let timeframe: String
-    let reasoning: String
-    let category: String
-    let iconName: String
-    let colorName: String
-}
-
 // MARK: - Helper Extensions
 
 extension Array where Element == AIRecommendation {
@@ -433,17 +434,3 @@ extension Array where Element == AIRecommendation {
         return filter { $0.priority == .critical || $0.priority == .urgent }
     }
 }
-
-// MARK: - Foundation Models Integration (Future)
-
-#if canImport(FoundationModels)
-import FoundationModels
-
-extension AIRecommendation {
-    /// Convert to Foundation Models compatible format when available
-    func toFoundationModelFormat() -> Any {
-        // Implementation will be added when FoundationModels is available
-        return self
-    }
-}
-#endif

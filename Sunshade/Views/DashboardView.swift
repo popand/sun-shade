@@ -4,7 +4,7 @@ struct DashboardView: View {
     @ObservedObject var viewModel: DashboardViewModel
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     HeaderSection(viewModel: viewModel)

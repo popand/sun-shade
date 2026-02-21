@@ -7,7 +7,7 @@ struct HelpSupportView: View {
     @State private var showingMailAlert = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     // Header
@@ -211,7 +211,7 @@ struct ContactItem: View {
             .cornerRadius(12)
             .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .disabled(action == nil)
     }
 }
@@ -245,7 +245,7 @@ struct FAQItem: View {
                 .padding()
                 .contentShape(Rectangle())
             }
-            .buttonStyle(PlainButtonStyle())
+            .buttonStyle(.plain)
             .accessibilityLabel(question)
             .accessibilityHint(isExpanded ? "Double tap to collapse" : "Double tap to expand answer")
             .accessibilityAddTraits(.isButton)

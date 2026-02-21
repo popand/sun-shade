@@ -14,7 +14,7 @@ struct UnifiedSafetyCard: View {
     enum DisplayMode {
         case basic       // Traditional static recommendations
         case smart       // Rule-based intelligent recommendations
-        case ai          // Future AI-powered recommendations (iOS 26+)
+        case ai          // AI-powered recommendations
     }
     
     private let displayMode: DisplayMode
@@ -31,7 +31,7 @@ struct UnifiedSafetyCard: View {
     
     init(
         viewModel: DashboardViewModel,
-        displayMode: DisplayMode = .smart,
+        displayMode: DisplayMode = .ai,
         showModeToggle: Bool = true,
         recommendationManager: RecommendationManager? = nil
     ) {

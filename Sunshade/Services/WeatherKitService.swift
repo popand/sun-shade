@@ -4,7 +4,6 @@ import CoreLocation
 
 typealias WKWeatherCondition = WeatherKit.WeatherCondition
 
-@available(iOS 16.0, *)
 class WeatherKitService: ObservableObject {
     
     enum WeatherKitError: Error, LocalizedError {
@@ -245,12 +244,8 @@ class WeatherKitService: ObservableObject {
     
 }
 
-@available(iOS 16.0, *)
 extension WeatherKitService {
     static func isAvailable() -> Bool {
-        if #available(iOS 16.0, *) {
-            return true
-        }
-        return false
+        return true
     }
 }

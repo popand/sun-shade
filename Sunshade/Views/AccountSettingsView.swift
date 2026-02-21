@@ -6,7 +6,7 @@ struct AccountSettingsView: View {
     @State private var showingSkinTypeSelection = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     // Header
@@ -63,7 +63,7 @@ struct AccountSettingsView: View {
                                         Text("51-65").tag(AgeRange.middleAge)
                                         Text("65+").tag(AgeRange.senior)
                                     }
-                                    .pickerStyle(MenuPickerStyle())
+                                    .pickerStyle(.menu)
                                     .accentColor(AppColors.primary)
                                 )
                             )
@@ -85,7 +85,7 @@ struct AccountSettingsView: View {
                                         Text("°F").tag(TemperatureUnit.fahrenheit)
                                         Text("°C").tag(TemperatureUnit.celsius)
                                     }
-                                    .pickerStyle(SegmentedPickerStyle())
+                                    .pickerStyle(.segmented)
                                     .frame(width: 100)
                                 )
                             )
@@ -195,7 +195,7 @@ struct SettingsItem: View {
             .cornerRadius(12)
             .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .disabled(action == nil && !showPicker)
     }
 }
@@ -237,7 +237,7 @@ struct SkinTypeSelectionView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     Text("Skin Type")
@@ -353,7 +353,7 @@ struct SkinTypeCard: View {
                     .stroke(isSelected ? AppColors.primary : Color.clear, lineWidth: 2)
             )
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
 }
 
@@ -396,7 +396,7 @@ struct NameSettingsItem: View {
             .cornerRadius(12)
             .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .sheet(isPresented: $showingNameInput) {
             NameInputSheet(
                 name: $tempName,
@@ -422,7 +422,7 @@ struct NameInputSheet: View {
     private let maxNameLength = 50
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 24) {
                 // Header
                 VStack(spacing: 16) {
@@ -449,7 +449,7 @@ struct NameInputSheet: View {
                         .foregroundColor(AppColors.textPrimary)
                     
                     TextField("Enter your name (optional)", text: $name)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .textFieldStyle(.roundedBorder)
                         .focused($isTextFieldFocused)
                         .submitLabel(.done)
                         .onChange(of: name) {

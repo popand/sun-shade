@@ -69,7 +69,7 @@ struct WeatherCard: View {
                 }
                 .padding(20)
             }
-            .buttonStyle(PlainButtonStyle())
+            .buttonStyle(.plain)
             .accessibilityLabel("\(viewModel.formattedTemperature), \(viewModel.weatherCondition), \(viewModel.cloudCover) percent cloud cover, tanning quality \(viewModel.currentTanningQuality.rawValue)")
             .accessibilityHint(isExpanded ? "Double tap to collapse forecast" : "Double tap to expand 5-day forecast")
 
