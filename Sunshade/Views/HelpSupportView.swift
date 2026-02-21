@@ -135,7 +135,7 @@ struct HelpSupportView: View {
                 messageBody: """
                 Hi SunshAid Support Team,
                 
-                App Version: 1.0.0
+                App Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")
                 Device: \(UIDevice.current.model)
                 iOS Version: \(UIDevice.current.systemVersion)
                 

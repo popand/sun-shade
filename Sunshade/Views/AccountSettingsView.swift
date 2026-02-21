@@ -107,7 +107,7 @@ struct AccountSettingsView: View {
                             )
                             SettingsInfoItem(
                                 title: "Compatibility",
-                                value: "iOS 16.0+"
+                                value: "iOS 26.0+"
                             )
                         }
                     }
