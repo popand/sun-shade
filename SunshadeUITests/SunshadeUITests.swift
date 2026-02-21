@@ -23,12 +23,46 @@ final class SunshadeUITests: XCTestCase {
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testAppStoreScreenshots() throws {
         let app = XCUIApplication()
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        // 1. Dashboard
+        sleep(3) // Let weather data load
+        saveScreenshot(app, name: "01_Dashboard")
+
+        // 2. Scroll down on dashboard to show more content
+        app.swipeUp()
+        sleep(1)
+        saveScreenshot(app, name: "02_DashboardMore")
+
+        // 3. Timer tab
+        app.tabBars.buttons["Timer"].tap()
+        sleep(1)
+        saveScreenshot(app, name: "03_SafetyTimer")
+
+        // 4. Profile tab
+        app.tabBars.buttons["Profile"].tap()
+        sleep(1)
+        saveScreenshot(app, name: "04_Profile")
+
+        // 5. Back to Dashboard, find Education section and tap into it
+        app.tabBars.buttons["Dashboard"].tap()
+        sleep(1)
+        // Scroll to find education cards
+        app.swipeUp()
+        sleep(1)
+        app.swipeUp()
+        sleep(1)
+        saveScreenshot(app, name: "05_Education")
+    }
+
+    private func saveScreenshot(_ app: XCUIApplication, name: String) {
+        let screenshot = app.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 
     @MainActor
